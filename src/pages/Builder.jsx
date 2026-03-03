@@ -1,6 +1,6 @@
 import React from 'react';
 import { useResume } from '../context/ResumeContext';
-import { Plus, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Trash2, ExternalLink, AlertCircle } from 'lucide-react';
 
 const Builder = () => {
     const { resumeData, setResumeData, loadSampleData } = useResume();
@@ -50,6 +50,76 @@ const Builder = () => {
         });
     };
 
+    // ATS Scoring Logic
+    const calculateATSScore = () => {
+        let score = 0;
+        const currentSuggestions = [];
+
+        // 1. Summary length (40-120 words)
+        const summaryWords = resumeData.summary.trim().split(/\s+/).filter(w => w.length > 0);
+        if (summaryWords.length >= 40 && summaryWords.length <= 120) {
+            score += 15;
+        } else {
+            currentSuggestions.push("Write a stronger summary (40–120 words).");
+        }
+
+        // 2. Projects (at least 2)
+        if (resumeData.projects.length >= 2) {
+            score += 10;
+        } else {
+            currentSuggestions.push("Add at least 2 projects.");
+        }
+
+        // 3. Experience (at least 1)
+        if (resumeData.experience.length >= 1) {
+            score += 10;
+        } else {
+            currentSuggestions.push("Add at least 1 experience entry.");
+        }
+
+        // 4. Skills (at least 8)
+        const skillsList = resumeData.skills.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        if (skillsList.length >= 8) {
+            score += 10;
+        } else {
+            currentSuggestions.push("Add more skills (target 8+).");
+        }
+
+        // 5. Links exist
+        if (resumeData.personal.links.github || resumeData.personal.links.linkedin) {
+            score += 10;
+        } else {
+            currentSuggestions.push("Add GitHub or LinkedIn links.");
+        }
+
+        // 6. Measurable impact (numbers)
+        const hasNumbers = [...resumeData.experience, ...resumeData.projects].some(item =>
+            /[0-9]|%|k|X/i.test(item.description || '')
+        );
+        if (hasNumbers) {
+            score += 15;
+        } else {
+            currentSuggestions.push("Add measurable impact (numbers) in bullets.");
+        }
+
+        // 7. Education complete
+        const educationComplete = resumeData.education.length > 0 && resumeData.education.every(edu =>
+            edu.school && edu.degree && edu.date
+        );
+        if (educationComplete) {
+            score += 10;
+        } else {
+            currentSuggestions.push("Complete your education details.");
+        }
+
+        return {
+            total: Math.min(score + 20, 100), // Base score of 20
+            suggestions: currentSuggestions.slice(0, 3)
+        };
+    };
+
+    const { total: atsScore, suggestions } = calculateATSScore();
+
     return (
         <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
             {/* Left: Form */}
@@ -60,21 +130,58 @@ const Builder = () => {
                 overflowY: 'auto',
                 maxHeight: 'calc(100vh - 64px)'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-                    <h2 style={{ fontSize: '24px', fontWeight: 600 }}>Resume Information</h2>
-                    <button
-                        onClick={loadSampleData}
-                        style={{
-                            background: 'none',
-                            border: '1px solid #ddd',
-                            padding: '8px 16px',
-                            borderRadius: '4px',
-                            fontSize: '12px',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        Load Sample Data
-                    </button>
+                <div style={{ marginBottom: '40px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                        <div>
+                            <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '4px' }}>Resume Information</h2>
+                            <p style={{ fontSize: '14px', color: '#666' }}>All changes are autosaved locally.</p>
+                        </div>
+                        <button
+                            onClick={loadSampleData}
+                            style={{
+                                background: 'none',
+                                border: '1px solid #ddd',
+                                padding: '8px 16px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                                fontWeight: 600
+                            }}
+                        >
+                            Load Sample Data
+                        </button>
+                    </div>
+
+                    {/* ATS Score Meter */}
+                    <div className="card" style={{ padding: '24px', background: '#fafafa', border: '1px solid #eaeaea' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#444' }}>
+                                ATS Readiness Score
+                            </span>
+                            <span style={{ fontSize: '24px', fontWeight: 800, color: atsScore > 70 ? '#4A6741' : atsScore > 40 ? '#C18B3A' : '#8B0000' }}>
+                                {atsScore}%
+                            </span>
+                        </div>
+                        <div style={{ width: '100%', height: '6px', background: '#eee', borderRadius: '10px', overflow: 'hidden', marginBottom: '20px' }}>
+                            <div style={{
+                                width: `${atsScore}%`,
+                                height: '100%',
+                                background: atsScore > 70 ? '#4A6741' : atsScore > 40 ? '#C18B3A' : '#8B0000',
+                                transition: 'width 0.4s ease-out'
+                            }} />
+                        </div>
+
+                        {suggestions.length > 0 && (
+                            <div className="stack-small">
+                                <span style={{ fontSize: '11px', fontWeight: 700, color: '#999', textTransform: 'uppercase' }}>Suggestions</span>
+                                {suggestions.map((s, i) => (
+                                    <div key={i} style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', color: '#555' }}>
+                                        <AlertCircle size={14} style={{ color: '#C18B3A' }} /> {s}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="stack-large">
@@ -252,48 +359,90 @@ const Builder = () => {
             }}>
                 <div style={{
                     width: '100%',
-                    maxWidth: '595px', // Approx A4 width ratio
+                    maxWidth: '595px',
                     background: '#fff',
                     boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
-                    minHeight: '842px', // Approx A4 height ratio
+                    minHeight: '842px',
                     padding: '40px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '24px'
+                    gap: '24px',
+                    fontFamily: "'Inter', sans-serif"
                 }}>
-                    {/* Mock Resume Header */}
-                    <div style={{ textAlign: 'center', borderBottom: '2px solid #000', pb: '16px', paddingBottom: '16px' }}>
-                        <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0 }}>{resumeData.personal.name || 'YOUR NAME'}</h1>
-                        <div style={{ fontSize: '12px', display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
-                            <span>{resumeData.personal.email}</span>
-                            <span>•</span>
-                            <span>{resumeData.personal.phone}</span>
-                            <span>•</span>
-                            <span>{resumeData.personal.location}</span>
+                    {/* Real Resume Header */}
+                    <div style={{ textAlign: 'center', borderBottom: '2px solid #000', paddingBottom: '16px' }}>
+                        <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, fontFamily: 'var(--font-heading)' }}>
+                            {resumeData.personal.name || 'YOUR NAME'}
+                        </h1>
+                        <div style={{ fontSize: '10px', display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '6px', color: '#444' }}>
+                            {resumeData.personal.email && <span>{resumeData.personal.email}</span>}
+                            {resumeData.personal.email && resumeData.personal.phone && <span>•</span>}
+                            {resumeData.personal.phone && <span>{resumeData.personal.phone}</span>}
+                            {resumeData.personal.phone && resumeData.personal.location && <span>•</span>}
+                            {resumeData.personal.location && <span>{resumeData.personal.location}</span>}
                         </div>
                     </div>
 
-                    {/* Mock Sections */}
+                    {/* Resume Sections */}
                     {resumeData.summary && (
                         <div className="stack-small">
-                            <h4 style={{ fontSize: '12px', fontWeight: 700, borderBottom: '1px solid #ddd', pb: '4px', marginBottom: '8px' }}>PROFESSIONAL SUMMARY</h4>
-                            <p style={{ fontSize: '12px' }}>{resumeData.summary}</p>
+                            <h4 style={{ fontSize: '11px', fontWeight: 800, borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', textTransform: 'uppercase' }}>Summary</h4>
+                            <p style={{ fontSize: '11px', lineHeight: 1.5 }}>{resumeData.summary}</p>
                         </div>
                     )}
 
-                    <div className="stack-small">
-                        <h4 style={{ fontSize: '12px', fontWeight: 700, borderBottom: '1px solid #ddd', pb: '4px', marginBottom: '8px' }}>EXPERIENCE</h4>
-                        <div style={{ height: '100px', border: '1px dashed #eee', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb', fontSize: '12px' }}>
-                            Live preview layout placeholder
+                    {resumeData.experience.length > 0 && (
+                        <div className="stack-small">
+                            <h4 style={{ fontSize: '11px', fontWeight: 800, borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '8px', textTransform: 'uppercase' }}>Experience</h4>
+                            {resumeData.experience.map((exp, i) => (
+                                <div key={i} style={{ marginBottom: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700 }}>
+                                        <span>{exp.role}</span>
+                                        <span>{exp.date}</span>
+                                    </div>
+                                    <div style={{ fontSize: '10px', fontStyle: 'italic' }}>{exp.company}</div>
+                                    <p style={{ fontSize: '10px', marginTop: '4px' }}>{exp.description}</p>
+                                </div>
+                            ))}
                         </div>
-                    </div>
+                    )}
 
-                    <div className="stack-small">
-                        <h4 style={{ fontSize: '12px', fontWeight: 700, borderBottom: '1px solid #ddd', pb: '4px', marginBottom: '8px' }}>EDUCATION</h4>
-                        <div style={{ height: '50px', border: '1px dashed #eee', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#bbb', fontSize: '12px' }}>
-                            Academic record placeholder
+                    {resumeData.projects.length > 0 && (
+                        <div className="stack-small">
+                            <h4 style={{ fontSize: '11px', fontWeight: 800, borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '8px', textTransform: 'uppercase' }}>Projects</h4>
+                            {resumeData.projects.map((proj, i) => (
+                                <div key={i} style={{ marginBottom: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700 }}>
+                                        <span>{proj.name}</span>
+                                        {proj.link && <span style={{ fontWeight: 400, fontSize: '9px' }}>{proj.link}</span>}
+                                    </div>
+                                    <p style={{ fontSize: '10px', marginTop: '2px' }}>{proj.description}</p>
+                                </div>
+                            ))}
                         </div>
-                    </div>
+                    )}
+
+                    {resumeData.education.length > 0 && (
+                        <div className="stack-small">
+                            <h4 style={{ fontSize: '11px', fontWeight: 800, borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '8px', textTransform: 'uppercase' }}>Education</h4>
+                            {resumeData.education.map((edu, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                                    <div>
+                                        <div style={{ fontWeight: 700 }}>{edu.school}</div>
+                                        <div style={{ fontSize: '10px' }}>{edu.degree}</div>
+                                    </div>
+                                    <span style={{ fontWeight: 600 }}>{edu.date}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {resumeData.skills && (
+                        <div className="stack-small">
+                            <h4 style={{ fontSize: '11px', fontWeight: 800, borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', textTransform: 'uppercase' }}>Skills</h4>
+                            <p style={{ fontSize: '10px' }}>{resumeData.skills}</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

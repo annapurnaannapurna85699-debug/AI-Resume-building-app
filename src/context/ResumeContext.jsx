@@ -5,23 +5,30 @@ const ResumeContext = createContext();
 export const useResume = () => useContext(ResumeContext);
 
 export const ResumeProvider = ({ children }) => {
-    const [resumeData, setResumeData] = useState({
-        personal: {
-            name: '',
-            email: '',
-            phone: '',
-            location: '',
-            links: {
-                github: '',
-                linkedin: ''
-            }
-        },
-        summary: '',
-        education: [],
-        experience: [],
-        projects: [],
-        skills: ''
+    const [resumeData, setResumeData] = useState(() => {
+        const saved = localStorage.getItem('resumeBuilderData');
+        return saved ? JSON.parse(saved) : {
+            personal: {
+                name: '',
+                email: '',
+                phone: '',
+                location: '',
+                links: {
+                    github: '',
+                    linkedin: ''
+                }
+            },
+            summary: '',
+            education: [],
+            experience: [],
+            projects: [],
+            skills: ''
+        };
     });
+
+    React.useEffect(() => {
+        localStorage.setItem('resumeBuilderData', JSON.stringify(resumeData));
+    }, [resumeData]);
 
     const loadSampleData = () => {
         setResumeData({
@@ -49,12 +56,6 @@ export const ResumeProvider = ({ children }) => {
                     role: 'Lead Developer',
                     date: '2019 - Present',
                     description: 'Architected and implemented a microservices-based platform serving 1M+ active users. Improved system performance by 40% through optimized caching strategies.'
-                },
-                {
-                    company: 'InnoLabs',
-                    role: 'Full Stack Engineer',
-                    date: '2016 - 2019',
-                    description: 'Developed and maintained various client projects using React and Node.js. Integrated AI-driven search functionality and personalized recommendation engines.'
                 }
             ],
             projects: [
@@ -62,6 +63,11 @@ export const ResumeProvider = ({ children }) => {
                     name: 'AI Resume Analyzer',
                     description: 'Built a tool that uses NLP to analyze resumes against job descriptions, achieving 85% accuracy in skill matching.',
                     link: 'github.com/arivera/ai-resume-analyzer'
+                },
+                {
+                    name: 'CloudSync Hub',
+                    description: 'Developed a real-time file synchronization service with 99.9% uptime and zero-latency data updates for 50k+ users.',
+                    link: 'github.com/arivera/cloud-sync'
                 }
             ],
             skills: 'JavaScript, TypeScript, React, Node.js, Python, AWS, Docker, GraphQL, System Architecture, Team Leadership'
