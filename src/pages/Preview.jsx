@@ -1,9 +1,54 @@
 import React from 'react';
 import { useResume } from '../context/ResumeContext';
-import { Mail, Phone, MapPin, Github, Linkedin, Globe } from 'lucide-react';
+import { Mail, Phone, MapPin, Github, Linkedin, Printer, FileText, AlertTriangle } from 'lucide-react';
 
 const Preview = () => {
     const { resumeData, selectedTemplate, setSelectedTemplate } = useResume();
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    const copyAsPlainText = () => {
+        let text = `${resumeData.personal.name || 'Your Name'}\n`;
+        text += `${resumeData.personal.email} | ${resumeData.personal.phone} | ${resumeData.personal.location}\n`;
+        if (resumeData.personal.links.github) text += `GitHub: ${resumeData.personal.links.github}\n`;
+        if (resumeData.personal.links.linkedin) text += `LinkedIn: ${resumeData.personal.links.linkedin}\n`;
+
+        if (resumeData.summary) {
+            text += `\nPROFESSIONAL SUMMARY\n====================\n${resumeData.summary}\n`;
+        }
+
+        if (resumeData.experience.length > 0) {
+            text += `\nWORK EXPERIENCE\n===============\n`;
+            resumeData.experience.forEach(exp => {
+                text += `${exp.role.toUpperCase()} | ${exp.company} | ${exp.date}\n${exp.description}\n\n`;
+            });
+        }
+
+        if (resumeData.projects.length > 0) {
+            text += `\nKEY PROJECTS\n============\n`;
+            resumeData.projects.forEach(proj => {
+                text += `${proj.name.toUpperCase()} ${proj.link ? `| ${proj.link}` : ''}\n${proj.description}\n\n`;
+            });
+        }
+
+        if (resumeData.education.length > 0) {
+            text += `\nEDUCATION\n=========\n`;
+            resumeData.education.forEach(edu => {
+                text += `${edu.school} | ${edu.degree} | ${edu.date}\n`;
+            });
+        }
+
+        if (resumeData.skills) {
+            text += `\nTECHNICAL SKILLS\n================\n${resumeData.skills}\n`;
+        }
+
+        navigator.clipboard.writeText(text);
+        alert('Resume copied to clipboard!');
+    };
+
+    const isMissingRequirements = !resumeData.personal.name || (resumeData.experience.length === 0 && resumeData.projects.length === 0);
 
     const renderResume = () => {
         const Header = () => (
@@ -69,7 +114,7 @@ const Preview = () => {
         );
 
         return (
-            <div style={{
+            <div className="resume-paper" style={{
                 maxWidth: '800px',
                 margin: '0 auto',
                 background: '#fff',
@@ -93,7 +138,7 @@ const Preview = () => {
                         <SectionHeader title="Work Experience" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             {resumeData.experience.map((exp, i) => (
-                                <div key={i}>
+                                <div key={i} style={{ pageBreakInside: 'avoid' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
                                         <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{exp.role}</h3>
                                         <span style={{ fontSize: '13px', fontWeight: 600 }}>{exp.date}</span>
@@ -111,7 +156,7 @@ const Preview = () => {
                         <SectionHeader title="Key Projects" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             {resumeData.projects.map((proj, i) => (
-                                <div key={i}>
+                                <div key={i} style={{ pageBreakInside: 'avoid' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
                                         <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{proj.name}</h3>
                                         {proj.link && <span style={{ fontSize: '12px', color: '#666', fontWeight: 500 }}>{proj.link}</span>}
@@ -128,7 +173,7 @@ const Preview = () => {
                         <SectionHeader title="Education" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {resumeData.education.map((edu, i) => (
-                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', pageBreakInside: 'avoid' }}>
                                     <div>
                                         <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{edu.school}</h3>
                                         <div style={{ fontSize: '14px', fontWeight: 500, color: '#444' }}>{edu.degree}</div>
@@ -151,9 +196,9 @@ const Preview = () => {
     };
 
     return (
-        <div style={{ background: '#f4f4f4', minHeight: 'calc(100vh - 64px)', padding: '40px 24px 100px' }}>
+        <div className="preview-container" style={{ background: '#f4f4f4', minHeight: 'calc(100vh - 64px)', padding: '40px 24px 100px' }}>
             {/* Template Navigator */}
-            <div style={{
+            <div className="template-navigator" style={{
                 display: 'flex',
                 maxWidth: 'fit-content',
                 margin: '0 auto 40px',
@@ -182,6 +227,59 @@ const Preview = () => {
                         {t}
                     </button>
                 ))}
+            </div>
+
+            {/* Export Actions & Info */}
+            <div className="export-actions" style={{ maxWidth: '800px', margin: '0 auto 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <button
+                            onClick={handlePrint}
+                            style={{
+                                padding: '10px 20px',
+                                background: '#000',
+                                color: '#fff',
+                                border: 'none',
+                                cursor: 'pointer',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                transition: 'opacity 0.2s'
+                            }}
+                            onMouseOver={(e) => e.target.style.opacity = '0.8'}
+                            onMouseOut={(e) => e.target.style.opacity = '1'}
+                        >
+                            <Printer size={16} /> Print / Save as PDF
+                        </button>
+                        <button
+                            onClick={copyAsPlainText}
+                            style={{
+                                padding: '10px 20px',
+                                background: 'transparent',
+                                border: '1px solid #ddd',
+                                cursor: 'pointer',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                        >
+                            <FileText size={16} /> Copy Resume as Text
+                        </button>
+                    </div>
+                </div>
+
+                {isMissingRequirements && (
+                    <div className="validation-warning" style={{ background: '#FFF7E6', border: '1px solid #FFE7BA', padding: '12px 16px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '12px', color: '#874D00', fontSize: '14px' }}>
+                        <AlertTriangle size={18} color="#FAAD14" />
+                        <span><strong>Incomplete Resume:</strong> Your resume may look sparse. We recommend adding your name and at least one experience or project for a professional look.</span>
+                    </div>
+                )}
             </div>
 
             {renderResume()}

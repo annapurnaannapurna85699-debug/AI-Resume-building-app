@@ -5,8 +5,10 @@
   --color-bg: #F7F6F3;
   --color-text-primary: #111111;
   --color-accent: #8B0000;
-  --color-success: #4A6741; /* Muted Green */
-  --color-warning: #C18B3A; /* Muted Amber */
+  --color-success: #4A6741;
+  /* Muted Green */
+  --color-warning: #C18B3A;
+  /* Muted Amber */
   --color-border: rgba(17, 17, 17, 0.1);
   --color-surface: #FFFFFF;
 
@@ -20,7 +22,7 @@
   /* Typography */
   --font-heading: 'Playfair Display', serif;
   --font-body: 'Inter', sans-serif;
-  
+
   /* Interaction */
   --transition: 180ms ease-in-out;
   --radius: 2px;
@@ -41,7 +43,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-family: var(--font-heading);
   font-weight: 700;
   line-height: 1.2;
@@ -124,7 +129,8 @@ a {
 
 .primary-workspace {
   flex: 0 0 70%;
-  min-width: 0; /* Prevent flex blowouts */
+  min-width: 0;
+  /* Prevent flex blowouts */
 }
 
 .secondary-panel {
@@ -194,7 +200,8 @@ a {
   opacity: 0.8;
 }
 
-input[type="text"], textarea {
+input[type="text"],
+textarea {
   width: 100%;
   padding: 12px;
   border: 1px solid var(--color-border);
@@ -205,7 +212,8 @@ input[type="text"], textarea {
   transition: var(--transition);
 }
 
-input[type="text"]:focus, textarea:focus {
+input[type="text"]:focus,
+textarea:focus {
   outline: none;
   border-color: var(--color-accent);
 }
@@ -271,6 +279,64 @@ input[type="text"]:focus, textarea:focus {
 }
 
 /* Utilities */
-.stack-small { display: flex; flex-direction: column; gap: var(--space-1); }
-.stack-medium { display: flex; flex-direction: column; gap: var(--space-2); }
-.stack-large { display: flex; flex-direction: column; gap: var(--space-3); }
+.stack-small {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.stack-medium {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.stack-large {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: #fff !important;
+    padding: 0 !important;
+  }
+
+  .top-bar,
+  .template-navigator,
+  .export-actions,
+  .validation-warning {
+    display: none !important;
+  }
+
+  .preview-container {
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .resume-paper {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  @page {
+    margin: 2cm;
+    size: A4;
+  }
+
+  section {
+    page-break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    page-break-after: avoid;
+  }
+}
