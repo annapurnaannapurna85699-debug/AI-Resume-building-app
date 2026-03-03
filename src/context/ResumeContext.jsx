@@ -26,9 +26,17 @@ export const ResumeProvider = ({ children }) => {
         };
     });
 
+    const [selectedTemplate, setSelectedTemplate] = useState(() => {
+        return localStorage.getItem('resumeBuilderTemplate') || 'Classic';
+    });
+
     React.useEffect(() => {
         localStorage.setItem('resumeBuilderData', JSON.stringify(resumeData));
     }, [resumeData]);
+
+    React.useEffect(() => {
+        localStorage.setItem('resumeBuilderTemplate', selectedTemplate);
+    }, [selectedTemplate]);
 
     const loadSampleData = () => {
         setResumeData({
@@ -75,7 +83,7 @@ export const ResumeProvider = ({ children }) => {
     };
 
     return (
-        <ResumeContext.Provider value={{ resumeData, setResumeData, loadSampleData }}>
+        <ResumeContext.Provider value={{ resumeData, setResumeData, loadSampleData, selectedTemplate, setSelectedTemplate }}>
             {children}
         </ResumeContext.Provider>
     );

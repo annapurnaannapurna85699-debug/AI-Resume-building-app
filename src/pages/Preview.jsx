@@ -3,106 +3,188 @@ import { useResume } from '../context/ResumeContext';
 import { Mail, Phone, MapPin, Github, Linkedin, Globe } from 'lucide-react';
 
 const Preview = () => {
-    const { resumeData } = useResume();
+    const { resumeData, selectedTemplate, setSelectedTemplate } = useResume();
 
-    return (
-        <div style={{ background: '#f9f9f9', minHeight: 'calc(100vh - 64px)', padding: '60px 24px' }}>
+    const renderResume = () => {
+        const Header = () => (
+            <header style={{
+                marginBottom: '32px',
+                textAlign: selectedTemplate === 'Classic' ? 'center' : 'left',
+                borderBottom: selectedTemplate === 'Classic' ? '2px solid #000' : 'none',
+                paddingBottom: '16px'
+            }}>
+                <h1 style={{
+                    fontSize: selectedTemplate === 'Modern' ? '40px' : '32px',
+                    fontWeight: 900,
+                    margin: 0,
+                    textTransform: selectedTemplate === 'Modern' ? 'uppercase' : 'none',
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1
+                }}>
+                    {resumeData.personal.name || 'Your Name'}
+                </h1>
+                <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '16px',
+                    marginTop: '16px',
+                    fontSize: '13px',
+                    color: '#444',
+                    justifyContent: selectedTemplate === 'Classic' ? 'center' : 'flex-start',
+                    fontWeight: 500
+                }}>
+                    {resumeData.personal.email && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Mail size={14} /> {resumeData.personal.email}</span>}
+                    {resumeData.personal.phone && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Phone size={14} /> {resumeData.personal.phone}</span>}
+                    {resumeData.personal.location && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={14} /> {resumeData.personal.location}</span>}
+                </div>
+                <div style={{
+                    display: 'flex',
+                    gap: '16px',
+                    marginTop: '8px',
+                    fontSize: '13px',
+                    color: '#444',
+                    justifyContent: selectedTemplate === 'Classic' ? 'center' : 'flex-start',
+                    fontWeight: 500
+                }}>
+                    {resumeData.personal.links.github && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Github size={14} /> {resumeData.personal.links.github}</span>}
+                    {resumeData.personal.links.linkedin && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Linkedin size={14} /> {resumeData.personal.links.linkedin}</span>}
+                </div>
+                {selectedTemplate === 'Modern' && <div style={{ height: '6px', width: '80px', background: '#000', marginTop: '24px' }} />}
+            </header>
+        );
+
+        const SectionHeader = ({ title }) => (
+            <h2 style={{
+                fontSize: '13px',
+                fontWeight: 900,
+                borderBottom: selectedTemplate === 'Minimal' ? 'none' : '1.5px solid #000',
+                paddingBottom: '4px',
+                marginBottom: '16px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: selectedTemplate === 'Minimal' ? '#999' : '#000'
+            }}>
+                {title}
+            </h2>
+        );
+
+        return (
             <div style={{
                 maxWidth: '800px',
                 margin: '0 auto',
                 background: '#fff',
-                padding: '60px 80px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
-                fontFamily: "'Inter', sans-serif",
-                color: '#000'
+                padding: selectedTemplate === 'Minimal' ? '80px 100px' : '60px 80px',
+                boxShadow: '0 4px 40px rgba(0,0,0,0.06)',
+                fontFamily: selectedTemplate === 'Classic' ? "'Playfair Display', serif" : "'Inter', sans-serif",
+                color: '#000',
+                minHeight: '1050px' // A4 approx
             }}>
-                {/* Header */}
-                <header style={{ marginBottom: '40px' }}>
-                    <h1 style={{ fontSize: '32px', fontWeight: 700, margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {resumeData.personal.name || 'Your Name'}
-                    </h1>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginTop: '12px', fontSize: '13px', color: '#444' }}>
-                        {resumeData.personal.email && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={12} /> {resumeData.personal.email}</span>}
-                        {resumeData.personal.phone && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Phone size={12} /> {resumeData.personal.phone}</span>}
-                        {resumeData.personal.location && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={12} /> {resumeData.personal.location}</span>}
-                    </div>
-                    <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '13px', color: '#444' }}>
-                        {resumeData.personal.links.github && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Github size={12} /> {resumeData.personal.links.github}</span>}
-                        {resumeData.personal.links.linkedin && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Linkedin size={12} /> {resumeData.personal.links.linkedin}</span>}
-                    </div>
-                </header>
+                <Header />
 
-                {/* Summary */}
                 {resumeData.summary && (
                     <section style={{ marginBottom: '32px' }}>
-                        <h2 style={{ fontSize: '14px', fontWeight: 800, borderBottom: '1px solid #000', paddingBottom: '4px', marginBottom: '12px', textTransform: 'uppercase' }}>Professional Summary</h2>
-                        <p style={{ fontSize: '14px', lineHeight: 1.6 }}>{resumeData.summary}</p>
+                        <SectionHeader title="Professional Summary" />
+                        <p style={{ fontSize: '14px', lineHeight: 1.7, color: '#333' }}>{resumeData.summary}</p>
                     </section>
                 )}
 
-                {/* Experience */}
                 {resumeData.experience.length > 0 && (
                     <section style={{ marginBottom: '32px' }}>
-                        <h2 style={{ fontSize: '14px', fontWeight: 800, borderBottom: '1px solid #000', paddingBottom: '4px', marginBottom: '16px', textTransform: 'uppercase' }}>Work Experience</h2>
+                        <SectionHeader title="Work Experience" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             {resumeData.experience.map((exp, i) => (
                                 <div key={i}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-                                        <h3 style={{ fontSize: '15px', fontWeight: 700 }}>{exp.role}</h3>
-                                        <span style={{ fontSize: '13px', fontWeight: 500 }}>{exp.date}</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{exp.role}</h3>
+                                        <span style={{ fontSize: '13px', fontWeight: 600 }}>{exp.date}</span>
                                     </div>
-                                    <div style={{ fontSize: '14px', fontStyle: 'italic', marginBottom: '8px' }}>{exp.company}</div>
-                                    <p style={{ fontSize: '14px', lineHeight: 1.5, color: '#333' }}>{exp.description}</p>
+                                    <div style={{ fontSize: '14px', fontWeight: 600, color: '#666', marginBottom: '8px' }}>{exp.company}</div>
+                                    <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#444' }}>{exp.description}</p>
                                 </div>
                             ))}
                         </div>
                     </section>
                 )}
 
-                {/* Projects */}
                 {resumeData.projects.length > 0 && (
                     <section style={{ marginBottom: '32px' }}>
-                        <h2 style={{ fontSize: '14px', fontWeight: 800, borderBottom: '1px solid #000', paddingBottom: '4px', marginBottom: '16px', textTransform: 'uppercase' }}>Key Projects</h2>
+                        <SectionHeader title="Key Projects" />
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             {resumeData.projects.map((proj, i) => (
                                 <div key={i}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-                                        <h3 style={{ fontSize: '14px', fontWeight: 700 }}>{proj.name}</h3>
-                                        {proj.link && <span style={{ fontSize: '12px', color: '#666' }}>{proj.link}</span>}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{proj.name}</h3>
+                                        {proj.link && <span style={{ fontSize: '12px', color: '#666', fontWeight: 500 }}>{proj.link}</span>}
                                     </div>
-                                    <p style={{ fontSize: '13px', lineHeight: 1.5 }}>{proj.description}</p>
+                                    <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#444' }}>{proj.description}</p>
                                 </div>
                             ))}
                         </div>
                     </section>
                 )}
 
-                {/* Education */}
                 {resumeData.education.length > 0 && (
                     <section style={{ marginBottom: '32px' }}>
-                        <h2 style={{ fontSize: '14px', fontWeight: 800, borderBottom: '1px solid #000', paddingBottom: '4px', marginBottom: '16px', textTransform: 'uppercase' }}>Education</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <SectionHeader title="Education" />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {resumeData.education.map((edu, i) => (
                                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                                     <div>
-                                        <h3 style={{ fontSize: '14px', fontWeight: 700 }}>{edu.school}</h3>
-                                        <div style={{ fontSize: '13px' }}>{edu.degree}</div>
+                                        <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{edu.school}</h3>
+                                        <div style={{ fontSize: '14px', fontWeight: 500, color: '#444' }}>{edu.degree}</div>
                                     </div>
-                                    <span style={{ fontSize: '13px' }}>{edu.date}</span>
+                                    <span style={{ fontSize: '13px', fontWeight: 600 }}>{edu.date}</span>
                                 </div>
                             ))}
                         </div>
                     </section>
                 )}
 
-                {/* Skills */}
                 {resumeData.skills && (
                     <section>
-                        <h2 style={{ fontSize: '14px', fontWeight: 800, borderBottom: '1px solid #000', paddingBottom: '4px', marginBottom: '12px', textTransform: 'uppercase' }}>Technical Skills</h2>
-                        <p style={{ fontSize: '13px', lineHeight: 1.6 }}>{resumeData.skills}</p>
+                        <SectionHeader title="Technical Skills" />
+                        <p style={{ fontSize: '14px', lineHeight: 1.7, fontWeight: 500, color: '#333' }}>{resumeData.skills}</p>
                     </section>
                 )}
             </div>
+        );
+    };
+
+    return (
+        <div style={{ background: '#f4f4f4', minHeight: 'calc(100vh - 64px)', padding: '40px 24px 100px' }}>
+            {/* Template Navigator */}
+            <div style={{
+                display: 'flex',
+                maxWidth: 'fit-content',
+                margin: '0 auto 40px',
+                background: '#fff',
+                padding: '4px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                gap: '4px'
+            }}>
+                {['Classic', 'Modern', 'Minimal'].map(t => (
+                    <button
+                        key={t}
+                        onClick={() => setSelectedTemplate(t)}
+                        style={{
+                            padding: '10px 32px',
+                            border: 'none',
+                            background: selectedTemplate === t ? '#000' : 'transparent',
+                            color: selectedTemplate === t ? '#fff' : '#888',
+                            borderRadius: '6px',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        {t}
+                    </button>
+                ))}
+            </div>
+
+            {renderResume()}
         </div>
     );
 };
