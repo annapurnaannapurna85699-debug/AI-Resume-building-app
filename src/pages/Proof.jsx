@@ -1,99 +1,48 @@
-import React, { useState } from 'react';
-import { PROJECT_STEPS } from '../ProjectData';
-import { Check, X, Link as LinkIcon, Github, Globe, Copy } from 'lucide-react';
+import React from 'react';
+import { FileText, Database, ShieldCheck } from 'lucide-react';
 
 const Proof = () => {
-    const [links, setLinks] = useState({
-        lovable: '',
-        github: '',
-        deploy: ''
-    });
-
-    const artifacts = JSON.parse(localStorage.getItem('rb_artifacts') || '{}');
-
-    const isStepCompleted = (id) => {
-        return artifacts[`rb_step_${id}_artifact`] ? true : false;
-    };
-
-    const handleLinkChange = (key, value) => {
-        setLinks(prev => ({ ...prev, [key]: value }));
-    };
-
-    const copyFinalSubmission = () => {
-        const summary = PROJECT_STEPS.slice(0, 8).map(step => {
-            const completed = isStepCompleted(step.id);
-            return `${step.label}: ${completed ? 'COMPLETED' : 'PENDING'}`;
-        }).join('\n');
-
-        const finalString = `FINAL SUBMISSION: AI RESUME BUILDER\n\n${summary}\n\nLinks:\n- Lovable: ${links.lovable}\n- GitHub: ${links.github}\n- Deploy: ${links.deploy}`;
-
-        navigator.clipboard.writeText(finalString);
-        alert('Final submission copied to clipboard!');
-    };
-
     return (
-        <div className="stack-large">
-            <div className="stack-small">
-                <h2 style={{ fontSize: '24px' }}>Final Proof</h2>
-                <p style={{ opacity: 0.7 }}>Review your progress and submit your project links.</p>
-            </div>
+        <div style={{ padding: '80px 24px', maxWidth: '1000px', margin: '0 auto' }}>
+            <div className="stack-large">
+                <div className="stack-small">
+                    <h1 style={{ fontSize: '36px', fontWeight: 700 }}>Project Proof & Artifacts</h1>
+                    <p style={{ fontSize: '18px', color: '#666' }}>Documenting the build process and system validation.</p>
+                </div>
 
-            <div className="grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-2)' }}>
-                {PROJECT_STEPS.slice(0, 8).map((step) => (
-                    <div key={step.id} className="card" style={{ padding: 'var(--space-2)', marginBottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '14px', fontWeight: '500' }}>{step.id}. {step.label}</span>
-                        {isStepCompleted(step.id) ? (
-                            <Check size={16} color="var(--color-success)" />
-                        ) : (
-                            <X size={16} color="var(--color-accent)" />
-                        )}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginTop: '40px' }}>
+                    <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
+                        <div style={{ width: '48px', height: '48px', background: '#f0f0f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                            <FileText size={24} />
+                        </div>
+                        <h3 style={{ fontWeight: 600, marginBottom: '8px' }}>Requirements</h3>
+                        <p style={{ fontSize: '14px', color: '#888' }}>Software requirements specification and user stories.</p>
                     </div>
-                ))}
-            </div>
 
-            <div className="stack-medium">
-                <h3 style={{ fontSize: '18px', fontWeight: '600' }}>Submission Links</h3>
+                    <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
+                        <div style={{ width: '48px', height: '48px', background: '#f0f0f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                            <Database size={24} />
+                        </div>
+                        <h3 style={{ fontWeight: 600, marginBottom: '8px' }}>Architecture</h3>
+                        <p style={{ fontSize: '14px', color: '#888' }}>System design, data models, and API interfaces.</p>
+                    </div>
 
-                <div className="input-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <LinkIcon size={14} /> Lovable Project Link
-                    </label>
-                    <input
-                        type="text"
-                        placeholder="https://lovable.dev/projects/..."
-                        value={links.lovable}
-                        onChange={(e) => handleLinkChange('lovable', e.target.value)}
-                    />
+                    <div className="card" style={{ padding: '32px', textAlign: 'center' }}>
+                        <div style={{ width: '48px', height: '48px', background: '#f0f0f0', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                            <ShieldCheck size={24} />
+                        </div>
+                        <h3 style={{ fontWeight: 600, marginBottom: '8px' }}>Validation</h3>
+                        <p style={{ fontSize: '14px', color: '#888' }}>Testing logs, ATS scoring logic, and export formats.</p>
+                    </div>
                 </div>
 
-                <div className="input-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Github size={14} /> GitHub Repository
-                    </label>
-                    <input
-                        type="text"
-                        placeholder="https://github.com/username/repo"
-                        value={links.github}
-                        onChange={(e) => handleLinkChange('github', e.target.value)}
-                    />
-                </div>
-
-                <div className="input-group">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Globe size={14} /> Deployed Site Link
-                    </label>
-                    <input
-                        type="text"
-                        placeholder="https://your-app.vercel.app"
-                        value={links.deploy}
-                        onChange={(e) => handleLinkChange('deploy', e.target.value)}
-                    />
+                <div className="card" style={{ marginTop: '40px', padding: '40px', background: '#fff' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Artifact Verification</h2>
+                    <div style={{ padding: '24px', background: '#f9f9f9', borderRadius: '4px', border: '1px dashed #ddd', textAlign: 'center', color: '#888' }}>
+                        No artifacts uploaded yet. Use the Build Track to generate project artifacts.
+                    </div>
                 </div>
             </div>
-
-            <button className="button button--primary" onClick={copyFinalSubmission}>
-                <Copy size={16} /> Copy Final Submission
-            </button>
         </div>
     );
 };
