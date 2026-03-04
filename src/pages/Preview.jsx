@@ -3,7 +3,10 @@ import { useResume } from '../context/ResumeContext';
 import { Mail, Phone, MapPin, Github, Linkedin, Printer, FileText, AlertTriangle, Globe } from 'lucide-react';
 
 const Preview = () => {
-    const { resumeData, selectedTemplate, setSelectedTemplate } = useResume();
+    const {
+        resumeData, selectedTemplate, setSelectedTemplate,
+        atsScore, atsSuggestions, selectedColor
+    } = useResume();
 
     const handlePrint = () => {
         window.print();
@@ -54,14 +57,20 @@ const Preview = () => {
         alert('Resume copied to clipboard!');
     };
 
-    const isMissingRequirements = !resumeData.personal.name || (resumeData.experience.length === 0 && resumeData.projects.length === 0);
+    const getScoreInfo = () => {
+        if (atsScore <= 40) return { label: 'Needs Work', color: '#ef4444' };
+        if (atsScore <= 70) return { label: 'Getting There', color: '#f59e0b' };
+        return { label: 'Strong Resume', color: '#10b981' };
+    };
+
+    const { label: scoreLabel, color: scoreColor } = getScoreInfo();
 
     const renderResume = () => {
         const Header = () => (
             <header style={{
                 marginBottom: '32px',
                 textAlign: selectedTemplate === 'Classic' ? 'center' : 'left',
-                borderBottom: selectedTemplate === 'Classic' ? '2px solid #000' : 'none',
+                borderBottom: selectedTemplate === 'Classic' ? `2px solid ${selectedColor}` : 'none',
                 paddingBottom: '16px'
             }}>
                 <h1 style={{
@@ -70,7 +79,8 @@ const Preview = () => {
                     margin: 0,
                     textTransform: selectedTemplate === 'Modern' ? 'uppercase' : 'none',
                     letterSpacing: '-0.02em',
-                    lineHeight: 1
+                    lineHeight: 1,
+                    color: selectedTemplate === 'Minimal' ? selectedColor : '#000'
                 }}>
                     {resumeData.personal.name || 'Your Name'}
                 </h1>
@@ -100,7 +110,7 @@ const Preview = () => {
                     {resumeData.personal.links.github && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Github size={14} /> {resumeData.personal.links.github}</span>}
                     {resumeData.personal.links.linkedin && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Linkedin size={14} /> {resumeData.personal.links.linkedin}</span>}
                 </div>
-                {selectedTemplate === 'Modern' && <div style={{ height: '6px', width: '80px', background: '#000', marginTop: '24px' }} />}
+                {selectedTemplate === 'Modern' && <div style={{ height: '6px', width: '80px', background: selectedColor, marginTop: '24px' }} />}
             </header>
         );
 
@@ -108,12 +118,12 @@ const Preview = () => {
             <h2 style={{
                 fontSize: '13px',
                 fontWeight: 900,
-                borderBottom: selectedTemplate === 'Minimal' ? 'none' : '1.5px solid #000',
+                borderBottom: selectedTemplate === 'Minimal' ? 'none' : `1.5px solid ${selectedColor}`,
                 paddingBottom: '4px',
                 marginBottom: '16px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
-                color: selectedTemplate === 'Minimal' ? '#999' : '#000'
+                color: selectedTemplate === 'Minimal' ? selectedColor : '#000'
             }}>
                 {title}
             </h2>
@@ -122,13 +132,14 @@ const Preview = () => {
         return (
             <div className="resume-paper" style={{
                 maxWidth: '800px',
-                margin: '0 auto',
+                width: '100%',
                 background: '#fff',
                 padding: selectedTemplate === 'Minimal' ? '80px 100px' : '60px 80px',
                 boxShadow: '0 4px 40px rgba(0,0,0,0.06)',
                 fontFamily: selectedTemplate === 'Classic' ? "'Playfair Display', serif" : "'Inter', sans-serif",
                 color: '#000',
-                minHeight: '1050px' // A4 approx
+                minHeight: '1050px',
+                position: 'relative'
             }}>
                 <Header />
 
@@ -147,7 +158,7 @@ const Preview = () => {
                                 <div key={i} style={{ pageBreakInside: 'avoid' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
                                         <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{exp.role}</h3>
-                                        <span style={{ fontSize: '13px', fontWeight: 600 }}>{exp.date}</span>
+                                        <span style={{ fontSize: '13px', fontWeight: 600, color: selectedColor }}>{exp.date}</span>
                                     </div>
                                     <div style={{ fontSize: '14px', fontWeight: 600, color: '#666', marginBottom: '8px' }}>{exp.company}</div>
                                     <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#444' }}>{exp.description}</p>
@@ -198,7 +209,7 @@ const Preview = () => {
                                         <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{edu.school}</h3>
                                         <div style={{ fontSize: '14px', fontWeight: 500, color: '#444' }}>{edu.degree}</div>
                                     </div>
-                                    <span style={{ fontSize: '13px', fontWeight: 600 }}>{edu.date}</span>
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: selectedColor }}>{edu.date}</span>
                                 </div>
                             ))}
                         </div>
@@ -247,93 +258,109 @@ const Preview = () => {
     };
 
     return (
-        <div className="preview-container" style={{ background: '#f4f4f4', minHeight: 'calc(100vh - 64px)', padding: '40px 24px 100px' }}>
-            {/* Template Navigator */}
-            <div className="template-navigator" style={{
-                display: 'flex',
-                maxWidth: 'fit-content',
-                margin: '0 auto 40px',
-                background: '#fff',
-                padding: '4px',
-                borderRadius: '8px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-                gap: '4px'
-            }}>
-                {['Classic', 'Modern', 'Minimal'].map(t => (
-                    <button
-                        key={t}
-                        onClick={() => setSelectedTemplate(t)}
-                        style={{
-                            padding: '10px 32px',
-                            border: 'none',
-                            background: selectedTemplate === t ? '#000' : 'transparent',
-                            color: selectedTemplate === t ? '#fff' : '#888',
-                            borderRadius: '6px',
-                            fontSize: '13px',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        {t}
-                    </button>
-                ))}
-            </div>
+        <div className="preview-container" style={{ background: '#f5f7f9', minHeight: 'calc(100vh - 64px)', padding: '40px 24px 100px' }}>
+            <div style={{ display: 'flex', gap: '40px', maxWidth: '1240px', margin: '0 auto', alignItems: 'flex-start' }}>
 
-            {/* Export Actions & Info */}
-            <div className="export-actions" style={{ maxWidth: '800px', margin: '0 auto 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <button
-                            onClick={handlePrint}
-                            style={{
-                                padding: '10px 20px',
-                                background: '#000',
-                                color: '#fff',
-                                border: 'none',
-                                cursor: 'pointer',
-                                borderRadius: '4px',
-                                fontSize: '14px',
-                                fontWeight: 600,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                transition: 'opacity 0.2s'
-                            }}
-                            onMouseOver={(e) => e.target.style.opacity = '0.8'}
-                            onMouseOut={(e) => e.target.style.opacity = '1'}
-                        >
-                            <Printer size={16} /> Print / Save as PDF
-                        </button>
-                        <button
-                            onClick={copyAsPlainText}
-                            style={{
-                                padding: '10px 20px',
-                                background: 'transparent',
-                                border: '1px solid #ddd',
-                                cursor: 'pointer',
-                                borderRadius: '4px',
-                                fontSize: '14px',
-                                fontWeight: 600,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}
-                        >
-                            <FileText size={16} /> Copy Resume as Text
-                        </button>
+                {/* Fixed Insights Sidebar */}
+                <div style={{ flex: '0 0 320px', position: 'sticky', top: '40px' }}>
+                    <div className="card" style={{ padding: '24px', background: '#fff', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <h3 style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', color: '#999', marginBottom: '20px', letterSpacing: '0.05em' }}>ATS RESUME SCORE</h3>
+
+                            {/* Circular Progress */}
+                            <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto' }}>
+                                <svg style={{ width: '120px', height: '120px', transform: 'rotate(-90deg)' }}>
+                                    <circle cx="60" cy="60" r="54" fill="none" stroke="#eee" strokeWidth="8" />
+                                    <circle
+                                        cx="60" cy="60" r="54"
+                                        fill="none" stroke={scoreColor}
+                                        strokeWidth="8"
+                                        strokeDasharray={2 * Math.PI * 54}
+                                        strokeDashoffset={2 * Math.PI * 54 * (1 - atsScore / 100)}
+                                        strokeLinecap="round"
+                                        style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+                                    />
+                                </svg>
+                                <div style={{
+                                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexDirection: 'column'
+                                }}>
+                                    <span style={{ fontSize: '28px', fontWeight: 900, color: '#000' }}>{atsScore}</span>
+                                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#666' }}>/100</span>
+                                </div>
+                            </div>
+
+                            <div style={{ fontSize: '14px', fontWeight: 800, marginTop: '16px', color: scoreColor }}>{scoreLabel}</div>
+                        </div>
+
+                        {atsSuggestions.length > 0 ? (
+                            <div className="stack-medium">
+                                <h4 style={{ fontSize: '11px', fontWeight: 800, color: '#999', textTransform: 'uppercase' }}>HOW TO IMPROVE:</h4>
+                                <div className="stack-small">
+                                    {atsSuggestions.map((s, i) => (
+                                        <div key={i} style={{ fontSize: '12px', background: '#f8f9fa', padding: '10px', borderRadius: '8px', color: '#444', borderLeft: `3px solid ${scoreColor}` }}>
+                                            {s.text}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '16px', background: '#e6f4ea', borderRadius: '8px', color: '#1e7e34', fontSize: '12px', fontWeight: 600 }}>
+                                Your resume is top-tier! Ready for submission.
+                            </div>
+                        )}
+
+                        <div style={{ borderTop: '1px solid #eee', pt: '20px', mt: '10px' }}>
+                            <h4 style={{ fontSize: '11px', fontWeight: 800, color: '#999', textTransform: 'uppercase', marginBottom: '16px' }}>Quick Actions</h4>
+                            <div className="stack-small">
+                                <button onClick={handlePrint} className="button" style={{ width: '100%', justifyContent: 'center', height: '40px', background: '#000', color: '#fff' }}>
+                                    <Printer size={16} /> PDF Export
+                                </button>
+                                <button onClick={copyAsPlainText} className="button" style={{ width: '100%', justifyContent: 'center', height: '40px', background: 'transparent', border: '1px solid #ddd', color: '#555' }}>
+                                    <FileText size={16} /> Copy Content
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {isMissingRequirements && (
-                    <div className="validation-warning" style={{ background: '#FFF7E6', border: '1px solid #FFE7BA', padding: '12px 16px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '12px', color: '#874D00', fontSize: '14px' }}>
-                        <AlertTriangle size={18} color="#FAAD14" />
-                        <span><strong>Incomplete Resume:</strong> Your resume may look sparse. We recommend adding your name and at least one experience or project for a professional look.</span>
+                {/* Resume Workspace */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                    {/* Template Navigator */}
+                    <div className="template-navigator" style={{
+                        display: 'flex',
+                        maxWidth: 'fit-content',
+                        background: '#fff',
+                        padding: '4px',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                        gap: '4px'
+                    }}>
+                        {['Classic', 'Modern', 'Minimal'].map(t => (
+                            <button
+                                key={t}
+                                onClick={() => setSelectedTemplate(t)}
+                                style={{
+                                    padding: '8px 24px',
+                                    border: 'none',
+                                    background: selectedTemplate === t ? '#000' : 'transparent',
+                                    color: selectedTemplate === t ? '#fff' : '#888',
+                                    borderRadius: '8px',
+                                    fontSize: '13px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {t}
+                            </button>
+                        ))}
                     </div>
-                )}
-            </div>
 
-            {renderResume()}
+                    {renderResume()}
+                </div>
+            </div>
         </div>
     );
 };

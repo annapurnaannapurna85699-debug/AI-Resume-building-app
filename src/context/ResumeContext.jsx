@@ -131,6 +131,65 @@ export const ResumeProvider = ({ children }) => {
         });
     };
 
+    const calculateATSScore = () => {
+        let score = 0;
+        const suggestions = [];
+        const actionVerbs = ['built', 'led', 'designed', 'improved', 'implemented', 'developed', 'created', 'optimized', 'automated'];
+
+        // 1. Name (+10)
+        if (resumeData.personal.name.trim()) score += 10;
+        else suggestions.push({ text: "Add your full name (+10 points)", points: 10 });
+
+        // 2. Email (+10)
+        if (resumeData.personal.email.trim()) score += 10;
+        else suggestions.push({ text: "Add your email address (+10 points)", points: 10 });
+
+        // 3. Summary > 50 chars (+10)
+        if (resumeData.summary.length > 50) score += 10;
+        else suggestions.push({ text: "Write a professional summary (at least 50 chars) (+10 points)", points: 10 });
+
+        // 4. At least 1 experience (+15)
+        if (resumeData.experience.length > 0 && resumeData.experience.some(exp => exp.description.trim().length > 10)) score += 15;
+        else suggestions.push({ text: "Add at least one detailed experience entry (+15 points)", points: 15 });
+
+        // 5. At least 1 education (+10)
+        if (resumeData.education.length > 0) score += 10;
+        else suggestions.push({ text: "Add your education history (+10 points)", points: 10 });
+
+        // 6. At least 5 skills (+10)
+        const totalSkills = Object.values(resumeData.skills).flat().length;
+        if (totalSkills >= 5) score += 10;
+        else suggestions.push({ text: "Add at least 5 skills across categories (+10 points)", points: 10 });
+
+        // 7. At least 1 project (+10)
+        if (resumeData.projects.length > 0) score += 10;
+        else suggestions.push({ text: "Showcase at least one project (+10 points)", points: 10 });
+
+        // 8. Phone (+5)
+        if (resumeData.personal.phone.trim()) score += 5;
+        else suggestions.push({ text: "Include your phone number (+5 points)", points: 5 });
+
+        // 9. LinkedIn (+5)
+        if (resumeData.personal.links.linkedin.trim()) score += 5;
+        else suggestions.push({ text: "Link your LinkedIn profile (+5 points)", points: 5 });
+
+        // 10. GitHub (+5)
+        if (resumeData.personal.links.github.trim()) score += 5;
+        else suggestions.push({ text: "Link your GitHub repository (+5 points)", points: 5 });
+
+        // 11. Summary contains action verbs (+10)
+        const hasActionVerb = actionVerbs.some(verb => resumeData.summary.toLowerCase().includes(verb));
+        if (hasActionVerb) score += 10;
+        else suggestions.push({ text: "Use action verbs (e.g., 'Led', 'Built') in your summary (+10 points)", points: 10 });
+
+        return {
+            score: Math.min(score, 100),
+            suggestions: suggestions.sort((a, b) => b.points - a.points).slice(0, 3)
+        };
+    };
+
+    const atsResult = calculateATSScore();
+
     return (
         <ResumeContext.Provider value={{
             resumeData,
@@ -139,7 +198,9 @@ export const ResumeProvider = ({ children }) => {
             selectedTemplate,
             setSelectedTemplate,
             selectedColor,
-            setSelectedColor
+            setSelectedColor,
+            atsScore: atsResult.score,
+            atsSuggestions: atsResult.suggestions
         }}>
             {children}
         </ResumeContext.Provider>

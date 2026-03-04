@@ -47,7 +47,12 @@ const TagInput = ({ tags, onAdd, onRemove, placeholder }) => {
 };
 
 const Builder = () => {
-    const { resumeData, setResumeData, loadSampleData, selectedTemplate, setSelectedTemplate, selectedColor, setSelectedColor } = useResume();
+    const {
+        resumeData, setResumeData, loadSampleData,
+        selectedTemplate, setSelectedTemplate,
+        selectedColor, setSelectedColor,
+        atsScore, atsSuggestions
+    } = useResume();
     const [isSuggesting, setIsSuggesting] = useState(false);
     const [expandedProjects, setExpandedProjects] = useState({});
     const [showToast, setShowToast] = useState(false);
@@ -154,84 +159,7 @@ const Builder = () => {
         setExpandedProjects(prev => ({ ...prev, [index]: !prev[index] }));
     };
 
-    // ATS Scoring Logic
-    const calculateATSScore = () => {
-        let score = 0;
-        const currentSuggestions = [];
-        const topImprovements = [];
 
-        // 1. Summary length (40-120 words)
-        const summaryWords = resumeData.summary.trim().split(/\s+/).filter(w => w.length > 0);
-        if (summaryWords.length >= 40 && summaryWords.length <= 120) {
-            score += 15;
-        } else {
-            currentSuggestions.push("Write a stronger summary (40–120 words).");
-            if (summaryWords.length < 40) topImprovements.push("Expand your summary (target 40-120 words).");
-        }
-
-        // 2. Projects (at least 2)
-        if (resumeData.projects.length >= 2) {
-            score += 10;
-        } else {
-            currentSuggestions.push("Add at least 2 projects.");
-            topImprovements.push("Add at least 2 key projects.");
-        }
-
-        // 3. Experience (at least 1)
-        if (resumeData.experience.length >= 1) {
-            score += 10;
-        } else {
-            currentSuggestions.push("Add at least 1 experience entry.");
-            topImprovements.push("Add internship or professional experience.");
-        }
-
-        // 4. Skills (at least 8 total across categories)
-        const totalSkills = Object.values(resumeData.skills).flat().length;
-        if (totalSkills >= 8) {
-            score += 10;
-        } else {
-            currentSuggestions.push("Add more skills (target 8+ total).");
-            topImprovements.push("List at least 8 key skills.");
-        }
-
-        // 5. Links exist
-        if (resumeData.personal.links.github || resumeData.personal.links.linkedin) {
-            score += 10;
-        } else {
-            currentSuggestions.push("Add GitHub or LinkedIn links.");
-            topImprovements.push("Include GitHub or LinkedIn links.");
-        }
-
-        // 6. Measurable impact (numbers)
-        const hasNumbers = [...resumeData.experience, ...resumeData.projects].some(item =>
-            /[0-9]|%|k|X/i.test(item.description || '')
-        );
-        if (hasNumbers) {
-            score += 15;
-        } else {
-            currentSuggestions.push("Add measurable impact (numbers) in bullets.");
-            topImprovements.push("Add quantifiable results (%, $, #) to impact.");
-        }
-
-        // 7. Education complete
-        const educationComplete = resumeData.education.length > 0 && resumeData.education.every(edu =>
-            edu.school && edu.degree && edu.date
-        );
-        if (educationComplete) {
-            score += 10;
-        } else {
-            currentSuggestions.push("Complete your education details.");
-            topImprovements.push("Complete your education details.");
-        }
-
-        return {
-            total: Math.min(score + 20, 100), // Base score of 20
-            suggestions: currentSuggestions.slice(0, 3),
-            improvements: topImprovements.slice(0, 3)
-        };
-    };
-
-    const { total: atsScore, suggestions, improvements } = calculateATSScore();
 
     // Template Renderers
     const renderResumeContent = () => {
@@ -492,13 +420,40 @@ const Builder = () => {
 
                 {/* Score */}
                 <div className="card" style={{ padding: '24px', background: '#fafafa', marginBottom: '40px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>ATS Score</span>
-                        <span style={{ fontSize: '24px', fontWeight: 800, color: selectedColor }}>{atsScore}%</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
+                        <div>
+                            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: '#666' }}>ATS Optimizer</span>
+                            <div style={{ fontSize: '24px', fontWeight: 800, color: '#000' }}>{atsScore}%</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{
+                                fontSize: '10px',
+                                fontWeight: 800,
+                                padding: '4px 12px',
+                                borderRadius: '100px',
+                                background: atsScore > 70 ? '#e6f4ea' : atsScore > 40 ? '#fff8e1' : '#fce8e6',
+                                color: atsScore > 70 ? '#1e7e34' : atsScore > 40 ? '#b7791f' : '#d93025'
+                            }}>
+                                {atsScore > 70 ? 'STRONG' : atsScore > 40 ? 'AVERAGE' : 'NEEDS WORK'}
+                            </div>
+                        </div>
                     </div>
-                    <div style={{ width: '100%', height: '6px', background: '#eee', borderRadius: '10px', overflow: 'hidden' }}>
-                        <div style={{ width: `${atsScore}%`, height: '100%', background: selectedColor, transition: 'width 0.4s' }} />
+
+                    <div style={{ width: '100%', height: '8px', background: '#eee', borderRadius: '10px', overflow: 'hidden', marginBottom: '20px' }}>
+                        <div style={{ width: `${atsScore}%`, height: '100%', background: selectedColor, transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }} />
                     </div>
+
+                    {atsSuggestions.length > 0 && (
+                        <div className="stack-small">
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#666', textTransform: 'uppercase' }}>Next Improvements</span>
+                            {atsSuggestions.map((s, i) => (
+                                <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '12px', color: '#444' }}>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: selectedColor }} />
+                                    {s.text}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="stack-large">
