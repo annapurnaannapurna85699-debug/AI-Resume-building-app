@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useResume } from '../context/ResumeContext';
-import { Plus, Trash2, ExternalLink, AlertCircle, Sparkles, ChevronDown, ChevronUp, Github, Globe, X } from 'lucide-react';
+import { Plus, Trash2, ExternalLink, AlertCircle, Sparkles, ChevronDown, ChevronUp, Github, Globe, X, Check, Mail, Phone, MapPin, Linkedin } from 'lucide-react';
 
 const TagInput = ({ tags, onAdd, onRemove, placeholder }) => {
     const [input, setInput] = useState('');
@@ -47,9 +47,10 @@ const TagInput = ({ tags, onAdd, onRemove, placeholder }) => {
 };
 
 const Builder = () => {
-    const { resumeData, setResumeData, loadSampleData, selectedTemplate, setSelectedTemplate } = useResume();
+    const { resumeData, setResumeData, loadSampleData, selectedTemplate, setSelectedTemplate, selectedColor, setSelectedColor } = useResume();
     const [isSuggesting, setIsSuggesting] = useState(false);
     const [expandedProjects, setExpandedProjects] = useState({});
+    const [showToast, setShowToast] = useState(false);
 
     const ACTION_VERBS = ['Built', 'Developed', 'Designed', 'Implemented', 'Led', 'Improved', 'Created', 'Optimized', 'Automated'];
 
@@ -119,6 +120,19 @@ const Builder = () => {
             ...prev,
             skills: { ...prev.skills, [category]: tags }
         }));
+    };
+
+    const COLORS = [
+        { name: 'Teal', value: 'hsl(168, 60%, 40%)' },
+        { name: 'Navy', value: 'hsl(220, 60%, 35%)' },
+        { name: 'Burgundy', value: 'hsl(345, 60%, 35%)' },
+        { name: 'Forest', value: 'hsl(150, 50%, 30%)' },
+        { name: 'Charcoal', value: 'hsl(0, 0%, 25%)' }
+    ];
+
+    const handleDownload = () => {
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
     };
 
     const suggestSkills = () => {
@@ -221,35 +235,151 @@ const Builder = () => {
 
     // Template Renderers
     const renderResumeContent = () => {
-        const Header = () => (
-            <div style={{ textAlign: selectedTemplate === 'Classic' ? 'center' : 'left', borderBottom: selectedTemplate === 'Classic' ? '2px solid #000' : 'none', paddingBottom: '16px', marginBottom: '8px' }}>
-                <h1 style={{ fontSize: selectedTemplate === 'Modern' ? '32px' : '24px', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', textTransform: selectedTemplate === 'Modern' ? 'uppercase' : 'none' }}>
-                    {resumeData.personal.name || 'YOUR NAME'}
-                </h1>
-                <div style={{ fontSize: '10px', display: 'flex', justifyContent: selectedTemplate === 'Classic' ? 'center' : 'flex-start', gap: '12px', marginTop: '8px', color: '#555', fontWeight: 500 }}>
-                    {resumeData.personal.email && <span>{resumeData.personal.email}</span>}
-                    {resumeData.personal.phone && <span>{resumeData.personal.phone}</span>}
-                    {resumeData.personal.location && <span>{resumeData.personal.location}</span>}
-                </div>
-                {selectedTemplate === 'Modern' && <div style={{ height: '4px', width: '60px', background: '#000', marginTop: '12px' }} />}
-            </div>
-        );
-
-        const SectionHeader = ({ title }) => (
+        const SectionHeader = ({ title, style = {} }) => (
             <h4 style={{
                 fontSize: '11px',
                 fontWeight: 900,
-                borderBottom: selectedTemplate === 'Minimal' ? 'none' : '1px solid #000',
+                borderBottom: selectedTemplate === 'Minimal' ? 'none' : `1px solid ${selectedColor}`,
                 paddingBottom: '2px',
                 marginBottom: '8px',
                 marginTop: '16px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
-                color: selectedTemplate === 'Minimal' ? '#888' : '#000'
+                color: selectedTemplate === 'Minimal' ? selectedColor : '#000',
+                ...style
             }}>
                 {title}
             </h4>
         );
+
+        const SkillPill = ({ text, color = '#eee', textColor = '#000' }) => (
+            <span style={{
+                fontSize: '8px',
+                background: color,
+                color: textColor,
+                padding: '2px 8px',
+                borderRadius: '100px',
+                fontWeight: 600
+            }}>
+                {text}
+            </span>
+        );
+
+        if (selectedTemplate === 'Modern') {
+            return (
+                <div style={{
+                    width: '100%',
+                    maxWidth: '595px',
+                    background: '#fff',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+                    minHeight: '842px',
+                    display: 'flex',
+                    fontFamily: "'Inter', sans-serif",
+                    color: '#333'
+                }}>
+                    {/* Left Sidebar */}
+                    <div style={{
+                        flex: '0 0 32%',
+                        background: selectedColor,
+                        color: '#fff',
+                        padding: '40px 20px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '24px'
+                    }}>
+                        <div>
+                            <h1 style={{ fontSize: '24px', fontWeight: 900, margin: 0, lineHeight: 1.1, textTransform: 'uppercase' }}>
+                                {resumeData.personal.name || 'YOUR NAME'}
+                            </h1>
+                        </div>
+
+                        <div className="stack-small" style={{ fontSize: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Mail size={12} /> {resumeData.personal.email}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Phone size={12} /> {resumeData.personal.phone}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><MapPin size={12} /> {resumeData.personal.location}</div>
+                        </div>
+
+                        <div className="stack-medium">
+                            <h4 style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '4px' }}>Skills</h4>
+                            <div className="stack-small">
+                                {resumeData.skills.technical.length > 0 && (
+                                    <div className="stack-small">
+                                        <span style={{ fontSize: '8px', fontWeight: 800, opacity: 0.7 }}>TECHNICAL</span>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                            {resumeData.skills.technical.map((s, i) => <SkillPill key={i} text={s} color="rgba(255,255,255,0.15)" textColor="#fff" />)}
+                                        </div>
+                                    </div>
+                                )}
+                                {resumeData.skills.soft.length > 0 && (
+                                    <div className="stack-small">
+                                        <span style={{ fontSize: '8px', fontWeight: 800, opacity: 0.7 }}>SOFT SKILLS</span>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                            {resumeData.skills.soft.map((s, i) => <SkillPill key={i} text={s} color="rgba(255,255,255,0.15)" textColor="#fff" />)}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="stack-medium">
+                            <h4 style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '4px' }}>Education</h4>
+                            {resumeData.education.map((edu, i) => (
+                                <div key={i} style={{ fontSize: '10px' }}>
+                                    <div style={{ fontWeight: 800 }}>{edu.school}</div>
+                                    <div style={{ opacity: 0.8 }}>{edu.degree}</div>
+                                    <div style={{ fontSize: '9px', opacity: 0.6 }}>{edu.date}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div style={{ flex: '1', padding: '40px 32px' }}>
+                        {resumeData.summary && (
+                            <div style={{ marginBottom: '24px' }}>
+                                <SectionHeader title="Profile" style={{ borderBottom: `2px solid ${selectedColor}`, paddingBottom: '4px' }} />
+                                <p style={{ fontSize: '11px', lineHeight: 1.6 }}>{resumeData.summary}</p>
+                            </div>
+                        )}
+
+                        <div style={{ marginBottom: '24px' }}>
+                            <SectionHeader title="Experience" style={{ borderBottom: `2px solid ${selectedColor}`, paddingBottom: '4px' }} />
+                            <div className="stack-medium">
+                                {resumeData.experience.map((exp, i) => (
+                                    <div key={i}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 800 }}>
+                                            <span>{exp.role}</span>
+                                            <span style={{ color: selectedColor }}>{exp.date}</span>
+                                        </div>
+                                        <div style={{ fontSize: '10px', fontWeight: 600, color: '#666' }}>{exp.company}</div>
+                                        <p style={{ fontSize: '10px', marginTop: '4px', lineHeight: 1.5 }}>{exp.description}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
+                            <SectionHeader title="Projects" style={{ borderBottom: `2px solid ${selectedColor}`, paddingBottom: '4px' }} />
+                            {resumeData.projects.map((proj, i) => (
+                                <div key={i} style={{ marginBottom: '12px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 800 }}>
+                                        <span>{proj.name}</span>
+                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                            {proj.githubUrl && <Github size={10} />}
+                                            {proj.liveUrl && <Globe size={10} />}
+                                        </div>
+                                    </div>
+                                    <p style={{ fontSize: '10px', lineHeight: 1.4, color: '#555', margin: '4px 0' }}>{proj.description}</p>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                        {proj.techStack?.map((t, ti) => <SkillPill key={ti} text={t} color="#f0f0f0" />)}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )
+        }
 
         return (
             <div style={{
@@ -261,26 +391,36 @@ const Builder = () => {
                 padding: selectedTemplate === 'Minimal' ? '60px' : '40px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '4px',
+                gap: '12px',
                 fontFamily: selectedTemplate === 'Classic' ? "'Playfair Display', serif" : "'Inter', sans-serif"
             }}>
-                <Header />
+                {/* Header */}
+                <div style={{ textAlign: selectedTemplate === 'Classic' ? 'center' : 'left', borderBottom: selectedTemplate === 'Classic' ? `2px solid ${selectedColor}` : 'none', paddingBottom: '16px', marginBottom: '8px' }}>
+                    <h1 style={{ fontSize: '28px', fontWeight: 900, margin: 0, color: selectedTemplate === 'Minimal' ? selectedColor : '#000' }}>
+                        {resumeData.personal.name || 'YOUR NAME'}
+                    </h1>
+                    <div style={{ fontSize: '10px', display: 'flex', justifyContent: selectedTemplate === 'Classic' ? 'center' : 'flex-start', gap: '12px', marginTop: '8px', color: '#666', fontWeight: 500 }}>
+                        {resumeData.personal.email && <span>{resumeData.personal.email}</span>}
+                        {resumeData.personal.phone && <span>{resumeData.personal.phone}</span>}
+                        {resumeData.personal.location && <span>{resumeData.personal.location}</span>}
+                    </div>
+                </div>
 
                 {resumeData.summary && (
-                    <div className="stack-small">
+                    <div>
                         <SectionHeader title="Summary" />
                         <p style={{ fontSize: '11px', lineHeight: 1.6, color: '#333' }}>{resumeData.summary}</p>
                     </div>
                 )}
 
                 {resumeData.experience.length > 0 && (
-                    <div className="stack-small">
+                    <div>
                         <SectionHeader title="Experience" />
                         {resumeData.experience.map((exp, i) => (
                             <div key={i} style={{ marginBottom: '12px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 800 }}>
                                     <span>{exp.role}</span>
-                                    <span>{exp.date}</span>
+                                    <span style={{ color: selectedColor }}>{exp.date}</span>
                                 </div>
                                 <div style={{ fontSize: '10px', fontWeight: 600, color: '#666' }}>{exp.company}</div>
                                 <p style={{ fontSize: '10px', marginTop: '4px', lineHeight: 1.5 }}>{exp.description}</p>
@@ -290,22 +430,20 @@ const Builder = () => {
                 )}
 
                 {resumeData.projects.length > 0 && (
-                    <div className="stack-small">
+                    <div>
                         <SectionHeader title="Projects" />
                         {resumeData.projects.map((proj, i) => (
-                            <div key={i} style={{ marginBottom: '16px', padding: '12px', background: '#fcfcfc', border: '1px solid #f0f0f0', borderRadius: '4px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 800, marginBottom: '4px' }}>
+                            <div key={i} style={{ marginBottom: '12px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 800 }}>
                                     <span>{proj.name}</span>
-                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                        {proj.githubUrl && <a href={proj.githubUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#666' }}><Github size={12} /></a>}
-                                        {proj.liveUrl && <a href={proj.liveUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#666' }}><Globe size={12} /></a>}
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        {proj.githubUrl && <Github size={12} />}
+                                        {proj.liveUrl && <Globe size={12} />}
                                     </div>
                                 </div>
-                                <p style={{ fontSize: '10px', lineHeight: 1.4, color: '#444', marginBottom: '8px' }}>{proj.description}</p>
+                                <p style={{ fontSize: '10px', lineHeight: 1.4, margin: '4px 0' }}>{proj.description}</p>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                    {proj.techStack?.map((tech, ti) => (
-                                        <span key={ti} style={{ fontSize: '8px', background: '#eee', padding: '2px 6px', borderRadius: '10px', fontWeight: 600 }}>{tech}</span>
-                                    ))}
+                                    {proj.techStack?.map((t, ti) => <SkillPill key={ti} text={t} color="#f5f5f5" />)}
                                 </div>
                             </div>
                         ))}
@@ -313,57 +451,28 @@ const Builder = () => {
                 )}
 
                 {resumeData.education.length > 0 && (
-                    <div className="stack-small">
+                    <div>
                         <SectionHeader title="Education" />
                         {resumeData.education.map((edu, i) => (
-                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '8px' }}>
-                                <div>
-                                    <div style={{ fontWeight: 800 }}>{edu.school}</div>
-                                    <div style={{ fontSize: '10px', fontWeight: 500 }}>{edu.degree}</div>
-                                </div>
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+                                <span><span style={{ fontWeight: 800 }}>{edu.school}</span> — {edu.degree}</span>
                                 <span style={{ fontWeight: 600 }}>{edu.date}</span>
                             </div>
                         ))}
                     </div>
                 )}
 
-                {(resumeData.skills.technical.length > 0 || resumeData.skills.soft.length > 0 || resumeData.skills.tools.length > 0) && (
-                    <div className="stack-small">
-                        <SectionHeader title="Skills" />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {resumeData.skills.technical.length > 0 && (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '9px', fontWeight: 800, color: '#888', textTransform: 'uppercase', minWidth: '70px' }}>Technical</span>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                        {resumeData.skills.technical.map((skill, si) => (
-                                            <span key={si} style={{ fontSize: '9px', background: '#000', color: '#fff', padding: '2px 8px', borderRadius: '100px', fontWeight: 600 }}>{skill}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            {resumeData.skills.soft.length > 0 && (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '9px', fontWeight: 800, color: '#888', textTransform: 'uppercase', minWidth: '70px' }}>Soft Skills</span>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                        {resumeData.skills.soft.map((skill, si) => (
-                                            <span key={si} style={{ fontSize: '9px', background: '#f0f0f0', border: '1px solid #ddd', padding: '2px 8px', borderRadius: '100px', fontWeight: 600 }}>{skill}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            {resumeData.skills.tools.length > 0 && (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '9px', fontWeight: 800, color: '#888', textTransform: 'uppercase', minWidth: '70px' }}>Tools</span>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                        {resumeData.skills.tools.map((skill, si) => (
-                                            <span key={si} style={{ fontSize: '9px', background: '#eee', padding: '2px 8px', borderRadius: '100px', fontWeight: 600 }}>{skill}</span>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <SectionHeader title="Skills" />
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                        {resumeData.skills.technical.length > 0 && (
+                            <div style={{ fontSize: '9px' }}><span style={{ fontWeight: 800, color: selectedColor }}>TECH: </span>{resumeData.skills.technical.join(', ')}</div>
+                        )}
+                        {resumeData.skills.soft.length > 0 && (
+                            <div style={{ fontSize: '9px' }}><span style={{ fontWeight: 800, color: selectedColor }}>SOFT: </span>{resumeData.skills.soft.join(', ')}</div>
+                        )}
                     </div>
-                )}
+                </div>
             </div>
         );
     };
@@ -371,67 +480,24 @@ const Builder = () => {
     return (
         <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
             {/* Left: Form */}
-            <div style={{
-                flex: '0 0 50%',
-                borderRight: '1px solid #eee',
-                padding: '40px',
-                overflowY: 'auto',
-                maxHeight: 'calc(100vh - 64px)',
-                background: '#fff'
-            }}>
-                {/* Header & ATS Score */}
-                <div style={{ marginBottom: '40px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                        <div>
-                            <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '4px' }}>Resume Information</h2>
-                            <p style={{ fontSize: '14px', color: '#666' }}>All changes are autosaved locally.</p>
-                        </div>
-                        <button
-                            onClick={loadSampleData}
-                            style={{
-                                background: 'none',
-                                border: '1px solid #ddd',
-                                padding: '8px 16px',
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                cursor: 'pointer',
-                                fontWeight: 600
-                            }}
-                        >
-                            Load Sample Data
-                        </button>
+            <div style={{ flex: '0 0 50%', borderRight: '1px solid #eee', padding: '40px', overflowY: 'auto', maxHeight: 'calc(100vh - 64px)', background: '#fff' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
+                    <div>
+                        <h2 style={{ fontSize: '24px', fontWeight: 600, marginBottom: '4px' }}>Resume Information</h2>
+                        <p style={{ fontSize: '14px', color: '#666' }}>All changes are autosaved locally.</p>
                     </div>
+                    <button onClick={loadSampleData} style={{ background: 'none', border: '1px solid #ddd', padding: '8px 16px', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}>Load Sample Data</button>
+                </div>
 
-                    {/* ATS Score Meter & Improvements */}
-                    <div className="card" style={{ padding: '24px', background: '#fafafa', border: '1px solid #eaeaea' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#444' }}>
-                                ATS Readiness Score
-                            </span>
-                            <span style={{ fontSize: '24px', fontWeight: 800, color: atsScore > 70 ? '#4A6741' : atsScore > 40 ? '#C18B3A' : '#8B0000' }}>
-                                {atsScore}%
-                            </span>
-                        </div>
-                        <div style={{ width: '100%', height: '6px', background: '#eee', borderRadius: '10px', overflow: 'hidden', marginBottom: '24px' }}>
-                            <div style={{
-                                width: `${atsScore}%`,
-                                height: '100%',
-                                background: atsScore > 70 ? '#4A6741' : atsScore > 40 ? '#C18B3A' : '#8B0000',
-                                transition: 'width 0.4s ease-out'
-                            }} />
-                        </div>
-
-                        {improvements.length > 0 && (
-                            <div className="stack-small" style={{ paddingTop: '16px', borderTop: '1px solid #eee' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 800, color: '#333', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Top 3 Improvements</span>
-                                {improvements.map((imp, i) => (
-                                    <div key={i} style={{ fontSize: '13px', display: 'flex', alignItems: 'flex-start', gap: '8px', color: '#555', lineHeight: 1.4 }}>
-                                        <div style={{ minWidth: '4px', height: '4px', borderRadius: '50%', background: '#C18B3A', marginTop: '6px' }} />
-                                        {imp}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                {/* Score */}
+                <div className="card" style={{ padding: '24px', background: '#fafafa', marginBottom: '40px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }}>ATS Score</span>
+                        <span style={{ fontSize: '24px', fontWeight: 800, color: selectedColor }}>{atsScore}%</span>
+                    </div>
+                    <div style={{ width: '100%', height: '6px', background: '#eee', borderRadius: '10px', overflow: 'hidden' }}>
+                        <div style={{ width: `${atsScore}%`, height: '100%', background: selectedColor, transition: 'width 0.4s' }} />
                     </div>
                 </div>
 
@@ -559,7 +625,7 @@ const Builder = () => {
                         })}
                     </section>
 
-                    {/* Projects Section - Updated with Accordion and Tags */}
+                    {/* Projects Section */}
                     <section className="stack-medium">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h3 style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', color: '#999', letterSpacing: '0.05em' }}>Projects</h3>
@@ -639,7 +705,7 @@ const Builder = () => {
                     </section>
 
 
-                    {/* Skills Section - Updated with Categories and Suggestion */}
+                    {/* Skills Section */}
                     <section className="stack-medium" style={{ paddingBottom: '80px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h3 style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', color: '#999', letterSpacing: '0.05em' }}>Skills</h3>
@@ -687,48 +753,129 @@ const Builder = () => {
                 </div>
             </div>
 
-            {/* Right: Preview Panel with Template Tabs */}
-            <div style={{
-                flex: '0 0 50%',
-                background: '#f4f4f4',
-                padding: '40px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                overflowY: 'auto'
-            }}>
-                {/* Template Navigator */}
-                <div style={{
-                    display: 'flex',
-                    background: '#fff',
-                    padding: '4px',
-                    borderRadius: '8px',
-                    marginBottom: '32px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                    gap: '4px'
-                }}>
-                    {['Classic', 'Modern', 'Minimal'].map(t => (
-                        <button
-                            key={t}
-                            onClick={() => setSelectedTemplate(t)}
-                            style={{
-                                padding: '8px 24px',
-                                border: 'none',
-                                background: selectedTemplate === t ? '#000' : 'transparent',
-                                color: selectedTemplate === t ? '#fff' : '#888',
-                                borderRadius: '6px',
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            {t}
-                        </button>
-                    ))}
+            {/* Right: Preview Panel */}
+            <div style={{ flex: '0 0 50%', background: '#f8f9fa', padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto' }}>
+                {/* Template Picker */}
+                <div style={{ width: '100%', maxWidth: '600px', marginBottom: '32px' }}>
+                    <h5 style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em' }}>Choose Template</h5>
+                    <div style={{ display: 'flex', gap: '20px' }}>
+                        {[
+                            { id: 'Classic', desc: 'Serif headings, rules' },
+                            { id: 'Modern', desc: 'Two-column sidebar' },
+                            { id: 'Minimal', desc: 'Clean, sans-serif' }
+                        ].map(t => (
+                            <div key={t.id} onClick={() => setSelectedTemplate(t.id)} style={{ cursor: 'pointer', flex: 1 }}>
+                                <div style={{
+                                    height: '160px',
+                                    background: '#fff',
+                                    borderRadius: '8px',
+                                    border: `2px solid ${selectedTemplate === t.id ? '#0066cc' : '#eee'}`,
+                                    padding: '12px',
+                                    position: 'relative',
+                                    boxShadow: selectedTemplate === t.id ? '0 8px 20px rgba(0,102,204,0.1)' : 'none',
+                                    transition: 'all 0.2s'
+                                }}>
+                                    {selectedTemplate === t.id && <div style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#0066cc', color: '#fff', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={14} /></div>}
+                                    {/* Sketch */}
+                                    <div style={{ height: '20px', width: '60%', background: '#eee', marginBottom: '10px', margin: t.id === 'Classic' ? '0 auto 10px' : '0 0 10px' }} />
+                                    {t.id === 'Modern' ? (
+                                        <div style={{ display: 'flex', gap: '8px', height: '80px' }}>
+                                            <div style={{ flex: '0 0 30%', background: '#f5f5f5' }} />
+                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <div style={{ height: '4px', width: '100%', background: '#f5f5f5' }} /><div style={{ height: '4px', width: '80%', background: '#f5f5f5' }} />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <div style={{ height: '4px', width: '100%', background: '#f5f5f5' }} /><div style={{ height: '4px', width: '100%', background: '#f5f5f5' }} /><div style={{ height: '4px', width: '100%', background: '#f5f5f5' }} />
+                                        </div>
+                                    )}
+                                </div>
+                                <div style={{ marginTop: '8px', textAlign: 'center' }}>
+                                    <div style={{ fontWeight: 700, fontSize: '13px' }}>{t.id}</div>
+                                    <div style={{ fontSize: '11px', color: '#888' }}>{t.desc}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Color Picker */}
+                    <div style={{ marginTop: '24px' }}>
+                        <h5 style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.05em' }}>Theme Color</h5>
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                            {COLORS.map(c => (
+                                <button
+                                    key={c.name}
+                                    onClick={() => setSelectedColor(c.value)}
+                                    title={c.name}
+                                    style={{
+                                        width: '32px',
+                                        height: '32px',
+                                        borderRadius: '50%',
+                                        background: c.value,
+                                        border: `2px solid ${selectedColor === c.value ? '#000' : 'transparent'}`,
+                                        padding: 0,
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        transition: 'transform 0.1s'
+                                    }}
+                                    onMouseOver={(e) => e.target.style.transform = 'scale(1.1)'}
+                                    onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                                >
+                                    {selectedColor === c.value && <Check size={16} color="#fff" />}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
-                {renderResumeContent()}
+                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', position: 'relative' }}>
+                    {renderResumeContent()}
+                </div>
+
+                {/* PDF Action */}
+                <button
+                    onClick={handleDownload}
+                    style={{
+                        position: 'fixed',
+                        bottom: '40px',
+                        right: '40px',
+                        background: '#000',
+                        color: '#fff',
+                        padding: '16px 32px',
+                        borderRadius: '100px',
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        border: 'none',
+                        cursor: 'pointer',
+                        boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                        zIndex: 100
+                    }}
+                >
+                    Download PDF
+                </button>
+
+                {/* Toast */}
+                {showToast && (
+                    <div style={{
+                        position: 'fixed',
+                        bottom: '100px',
+                        right: '40px',
+                        background: '#333',
+                        color: '#fff',
+                        padding: '12px 24px',
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                        animation: 'slideUp 0.3s ease-out',
+                        zIndex: 1000
+                    }}>
+                        PDF export ready! Check your downloads.
+                    </div>
+                )}
             </div>
         </div>
     );

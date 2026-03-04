@@ -63,6 +63,10 @@ export const ResumeProvider = ({ children }) => {
         return localStorage.getItem('resumeBuilderTemplate') || 'Classic';
     });
 
+    const [selectedColor, setSelectedColor] = useState(() => {
+        return localStorage.getItem('resumeBuilderColor') || 'hsl(168, 60%, 40%)';
+    });
+
     React.useEffect(() => {
         localStorage.setItem('resumeBuilderData', JSON.stringify(resumeData));
     }, [resumeData]);
@@ -70,6 +74,10 @@ export const ResumeProvider = ({ children }) => {
     React.useEffect(() => {
         localStorage.setItem('resumeBuilderTemplate', selectedTemplate);
     }, [selectedTemplate]);
+
+    React.useEffect(() => {
+        localStorage.setItem('resumeBuilderColor', selectedColor);
+    }, [selectedColor]);
 
     const loadSampleData = () => {
         setResumeData({
@@ -124,7 +132,15 @@ export const ResumeProvider = ({ children }) => {
     };
 
     return (
-        <ResumeContext.Provider value={{ resumeData, setResumeData, loadSampleData, selectedTemplate, setSelectedTemplate }}>
+        <ResumeContext.Provider value={{
+            resumeData,
+            setResumeData,
+            loadSampleData,
+            selectedTemplate,
+            setSelectedTemplate,
+            selectedColor,
+            setSelectedColor
+        }}>
             {children}
         </ResumeContext.Provider>
     );
