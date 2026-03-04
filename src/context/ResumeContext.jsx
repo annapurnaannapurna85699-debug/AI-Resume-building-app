@@ -7,7 +7,7 @@ export const useResume = () => useContext(ResumeContext);
 export const ResumeProvider = ({ children }) => {
     const [resumeData, setResumeData] = useState(() => {
         const saved = localStorage.getItem('resumeBuilderData');
-        return saved ? JSON.parse(saved) : {
+        const initialData = {
             personal: {
                 name: '',
                 email: '',
@@ -28,6 +28,35 @@ export const ResumeProvider = ({ children }) => {
                 tools: []
             }
         };
+
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                // Data Migration / Healing
+                return {
+                    ...initialData,
+                    ...parsed,
+                    personal: { ...initialData.personal, ...(parsed.personal || {}) },
+                    projects: Array.isArray(parsed.projects) ? parsed.projects.map(proj => ({
+                        name: '',
+                        description: '',
+                        techStack: [],
+                        liveUrl: '',
+                        githubUrl: '',
+                        ...proj
+                    })) : [],
+                    skills: {
+                        technical: Array.isArray(parsed.skills?.technical) ? parsed.skills.technical : [],
+                        soft: Array.isArray(parsed.skills?.soft) ? parsed.skills.soft : [],
+                        tools: Array.isArray(parsed.skills?.tools) ? parsed.skills.tools : []
+                    }
+                };
+            } catch (e) {
+                console.error("Failed to parse saved resume data", e);
+                return initialData;
+            }
+        }
+        return initialData;
     });
 
     const [selectedTemplate, setSelectedTemplate] = useState(() => {
