@@ -1,6 +1,6 @@
 import React from 'react';
 import { useResume } from '../context/ResumeContext';
-import { Mail, Phone, MapPin, Github, Linkedin, Printer, FileText, AlertTriangle } from 'lucide-react';
+import { Mail, Phone, MapPin, Github, Linkedin, Printer, FileText, AlertTriangle, Globe } from 'lucide-react';
 
 const Preview = () => {
     const { resumeData, selectedTemplate, setSelectedTemplate } = useResume();
@@ -29,7 +29,10 @@ const Preview = () => {
         if (resumeData.projects.length > 0) {
             text += `\nKEY PROJECTS\n============\n`;
             resumeData.projects.forEach(proj => {
-                text += `${proj.name.toUpperCase()} ${proj.link ? `| ${proj.link}` : ''}\n${proj.description}\n\n`;
+                text += `${proj.name.toUpperCase()} | ${proj.githubUrl || proj.liveUrl || ''}\n`;
+                text += `${proj.description}\n`;
+                if (proj.techStack?.length > 0) text += `Stack: ${proj.techStack.join(', ')}\n`;
+                text += `\n`;
             });
         }
 
@@ -40,8 +43,11 @@ const Preview = () => {
             });
         }
 
-        if (resumeData.skills) {
-            text += `\nTECHNICAL SKILLS\n================\n${resumeData.skills}\n`;
+        if (resumeData.skills.technical.length > 0 || resumeData.skills.soft.length > 0 || resumeData.skills.tools.length > 0) {
+            text += `\nSKILLS\n======\n`;
+            if (resumeData.skills.technical.length > 0) text += `Technical: ${resumeData.skills.technical.join(', ')}\n`;
+            if (resumeData.skills.soft.length > 0) text += `Soft Skills: ${resumeData.skills.soft.join(', ')}\n`;
+            if (resumeData.skills.tools.length > 0) text += `Tools: ${resumeData.skills.tools.join(', ')}\n`;
         }
 
         navigator.clipboard.writeText(text);
@@ -154,14 +160,28 @@ const Preview = () => {
                 {resumeData.projects.length > 0 && (
                     <section style={{ marginBottom: '32px' }}>
                         <SectionHeader title="Key Projects" />
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             {resumeData.projects.map((proj, i) => (
                                 <div key={i} style={{ pageBreakInside: 'avoid' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-                                        <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{proj.name}</h3>
-                                        {proj.link && <span style={{ fontSize: '12px', color: '#666', fontWeight: 500 }}>{proj.link}</span>}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <h3 style={{ fontSize: '15px', fontWeight: 800 }}>{proj.name}</h3>
+                                            <div style={{ display: 'flex', gap: '8px', color: '#666' }}>
+                                                {proj.githubUrl && <Github size={14} />}
+                                                {proj.liveUrl && <Globe size={14} />}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#444' }}>{proj.description}</p>
+                                    <p style={{ fontSize: '14px', lineHeight: 1.6, color: '#444', marginBottom: '8px' }}>{proj.description}</p>
+                                    {proj.techStack?.length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {proj.techStack.map((tech, ti) => (
+                                                <span key={ti} style={{ background: '#f0f0f0', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600, color: '#555' }}>
+                                                    {tech}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -185,10 +205,41 @@ const Preview = () => {
                     </section>
                 )}
 
-                {resumeData.skills && (
+                {(resumeData.skills.technical.length > 0 || resumeData.skills.soft.length > 0 || resumeData.skills.tools.length > 0) && (
                     <section>
-                        <SectionHeader title="Technical Skills" />
-                        <p style={{ fontSize: '14px', lineHeight: 1.7, fontWeight: 500, color: '#333' }}>{resumeData.skills}</p>
+                        <SectionHeader title="Skills" />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {resumeData.skills.technical.length > 0 && (
+                                <div style={{ fontSize: '14px', lineHeight: 1.6 }}>
+                                    <strong style={{ fontWeight: 800 }}>Technical:</strong>{' '}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                                        {resumeData.skills.technical.map((s, i) => (
+                                            <span key={i} style={{ background: '#f5f5f5', padding: '2px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500 }}>{s}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {resumeData.skills.soft.length > 0 && (
+                                <div style={{ fontSize: '14px', lineHeight: 1.6 }}>
+                                    <strong style={{ fontWeight: 800 }}>Soft Skills:</strong>{' '}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                                        {resumeData.skills.soft.map((s, i) => (
+                                            <span key={i} style={{ background: '#f5f5f5', padding: '2px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500 }}>{s}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {resumeData.skills.tools.length > 0 && (
+                                <div style={{ fontSize: '14px', lineHeight: 1.6 }}>
+                                    <strong style={{ fontWeight: 800 }}>Tools:</strong>{' '}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
+                                        {resumeData.skills.tools.map((s, i) => (
+                                            <span key={i} style={{ background: '#f5f5f5', padding: '2px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500 }}>{s}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </section>
                 )}
             </div>

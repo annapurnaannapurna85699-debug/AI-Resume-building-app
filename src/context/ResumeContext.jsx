@@ -22,7 +22,11 @@ export const ResumeProvider = ({ children }) => {
             education: [],
             experience: [],
             projects: [],
-            skills: ''
+            skills: {
+                technical: [],
+                soft: [],
+                tools: []
+            }
         };
     });
 
@@ -70,15 +74,23 @@ export const ResumeProvider = ({ children }) => {
                 {
                     name: 'AI Resume Analyzer',
                     description: 'Built a tool that uses NLP to analyze resumes against job descriptions, achieving 85% accuracy in skill matching.',
-                    link: 'github.com/arivera/ai-resume-analyzer'
+                    techStack: ['Node.js', 'Python', 'React', 'Elasticsearch'],
+                    githubUrl: 'github.com/arivera/ai-resume-analyzer',
+                    liveUrl: 'https://analyzer.example.com'
                 },
                 {
                     name: 'CloudSync Hub',
                     description: 'Developed a real-time file synchronization service with 99.9% uptime and zero-latency data updates for 50k+ users.',
-                    link: 'github.com/arivera/cloud-sync'
+                    techStack: ['Go', 'PostgreSQL', 'Redis', 'AWS'],
+                    githubUrl: 'github.com/arivera/cloud-sync',
+                    liveUrl: ''
                 }
             ],
-            skills: 'JavaScript, TypeScript, React, Node.js, Python, AWS, Docker, GraphQL, System Architecture, Team Leadership'
+            skills: {
+                technical: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Python'],
+                soft: ['Team Leadership', 'Problem Solving', 'Communication'],
+                tools: ['AWS', 'Docker', 'Git', 'GraphQL']
+            }
         });
     };
 

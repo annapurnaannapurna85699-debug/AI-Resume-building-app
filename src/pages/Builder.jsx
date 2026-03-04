@@ -1,9 +1,55 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useResume } from '../context/ResumeContext';
-import { Plus, Trash2, ExternalLink, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, ExternalLink, AlertCircle, Sparkles, ChevronDown, ChevronUp, Github, Globe, X } from 'lucide-react';
+
+const TagInput = ({ tags, onAdd, onRemove, placeholder }) => {
+    const [input, setInput] = useState('');
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && input.trim()) {
+            e.preventDefault();
+            onAdd(input.trim());
+            setInput('');
+        }
+    };
+
+    return (
+        <div className="tag-input-container">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                {tags.map((tag, i) => (
+                    <span key={i} style={{
+                        background: '#f0f0f0',
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                    }}>
+                        {tag}
+                        <button onClick={() => onRemove(i)} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: '#ff4444' }}>
+                            <X size={12} />
+                        </button>
+                    </span>
+                ))}
+            </div>
+            <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+                style={{ width: '100%' }}
+            />
+        </div>
+    );
+};
 
 const Builder = () => {
     const { resumeData, setResumeData, loadSampleData, selectedTemplate, setSelectedTemplate } = useResume();
+    const [isSuggesting, setIsSuggesting] = useState(false);
+    const [expandedProjects, setExpandedProjects] = useState({});
 
     const ACTION_VERBS = ['Built', 'Developed', 'Designed', 'Implemented', 'Led', 'Improved', 'Created', 'Optimized', 'Automated'];
 
@@ -40,12 +86,17 @@ const Builder = () => {
             ? { school: '', degree: '', date: '' }
             : section === 'experience'
                 ? { company: '', role: '', date: '', description: '' }
-                : { name: '', description: '', link: '' };
+                : { name: '', description: '', techStack: [], liveUrl: '', githubUrl: '' };
 
         setResumeData(prev => ({
             ...prev,
             [section]: [...prev[section], newItem]
         }));
+
+        if (section === 'projects') {
+            const index = resumeData.projects.length;
+            setExpandedProjects(prev => ({ ...prev, [index]: true }));
+        }
     };
 
     const removeItem = (section, index) => {
@@ -61,6 +112,32 @@ const Builder = () => {
             newList[index] = { ...newList[index], [field]: value };
             return { ...prev, [section]: newList };
         });
+    };
+
+    const updateSkills = (category, tags) => {
+        setResumeData(prev => ({
+            ...prev,
+            skills: { ...prev.skills, [category]: tags }
+        }));
+    };
+
+    const suggestSkills = () => {
+        setIsSuggesting(true);
+        setTimeout(() => {
+            setResumeData(prev => ({
+                ...prev,
+                skills: {
+                    technical: [...new Set([...prev.skills.technical, "TypeScript", "React", "Node.js", "PostgreSQL", "GraphQL"])],
+                    soft: [...new Set([...prev.skills.soft, "Team Leadership", "Problem Solving"])],
+                    tools: [...new Set([...prev.skills.tools, "Git", "Docker", "AWS"])]
+                }
+            }));
+            setIsSuggesting(false);
+        }, 1000);
+    };
+
+    const toggleProject = (index) => {
+        setExpandedProjects(prev => ({ ...prev, [index]: !prev[index] }));
     };
 
     // ATS Scoring Logic
@@ -94,13 +171,13 @@ const Builder = () => {
             topImprovements.push("Add internship or professional experience.");
         }
 
-        // 4. Skills (at least 8)
-        const skillsList = resumeData.skills.split(',').map(s => s.trim()).filter(s => s.length > 0);
-        if (skillsList.length >= 8) {
+        // 4. Skills (at least 8 total across categories)
+        const totalSkills = Object.values(resumeData.skills).flat().length;
+        if (totalSkills >= 8) {
             score += 10;
         } else {
-            currentSuggestions.push("Add more skills (target 8+).");
-            topImprovements.push("List at least 8 technical skills.");
+            currentSuggestions.push("Add more skills (target 8+ total).");
+            topImprovements.push("List at least 8 key skills.");
         }
 
         // 5. Links exist
@@ -216,12 +293,20 @@ const Builder = () => {
                     <div className="stack-small">
                         <SectionHeader title="Projects" />
                         {resumeData.projects.map((proj, i) => (
-                            <div key={i} style={{ marginBottom: '12px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 800 }}>
+                            <div key={i} style={{ marginBottom: '16px', padding: '12px', background: '#fcfcfc', border: '1px solid #f0f0f0', borderRadius: '4px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 800, marginBottom: '4px' }}>
                                     <span>{proj.name}</span>
-                                    {proj.link && <span style={{ fontWeight: 500, fontSize: '9px', color: '#666' }}>{proj.link}</span>}
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        {proj.githubUrl && <a href={proj.githubUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#666' }}><Github size={12} /></a>}
+                                        {proj.liveUrl && <a href={proj.liveUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#666' }}><Globe size={12} /></a>}
+                                    </div>
                                 </div>
-                                <p style={{ fontSize: '10px', marginTop: '2px', lineHeight: 1.5 }}>{proj.description}</p>
+                                <p style={{ fontSize: '10px', lineHeight: 1.4, color: '#444', marginBottom: '8px' }}>{proj.description}</p>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                    {proj.techStack?.map((tech, ti) => (
+                                        <span key={ti} style={{ fontSize: '8px', background: '#eee', padding: '2px 6px', borderRadius: '10px', fontWeight: 600 }}>{tech}</span>
+                                    ))}
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -242,10 +327,41 @@ const Builder = () => {
                     </div>
                 )}
 
-                {resumeData.skills && (
+                {(resumeData.skills.technical.length > 0 || resumeData.skills.soft.length > 0 || resumeData.skills.tools.length > 0) && (
                     <div className="stack-small">
                         <SectionHeader title="Skills" />
-                        <p style={{ fontSize: '10px', lineHeight: 1.5, fontWeight: 500 }}>{resumeData.skills}</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {resumeData.skills.technical.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '9px', fontWeight: 800, color: '#888', textTransform: 'uppercase', minWidth: '70px' }}>Technical</span>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                        {resumeData.skills.technical.map((skill, si) => (
+                                            <span key={si} style={{ fontSize: '9px', background: '#000', color: '#fff', padding: '2px 8px', borderRadius: '100px', fontWeight: 600 }}>{skill}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {resumeData.skills.soft.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '9px', fontWeight: 800, color: '#888', textTransform: 'uppercase', minWidth: '70px' }}>Soft Skills</span>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                        {resumeData.skills.soft.map((skill, si) => (
+                                            <span key={si} style={{ fontSize: '9px', background: '#f0f0f0', border: '1px solid #ddd', padding: '2px 8px', borderRadius: '100px', fontWeight: 600 }}>{skill}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {resumeData.skills.tools.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '9px', fontWeight: 800, color: '#888', textTransform: 'uppercase', minWidth: '70px' }}>Tools</span>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                        {resumeData.skills.tools.map((skill, si) => (
+                                            <span key={si} style={{ fontSize: '9px', background: '#eee', padding: '2px 8px', borderRadius: '100px', fontWeight: 600 }}>{skill}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
@@ -443,7 +559,7 @@ const Builder = () => {
                         })}
                     </section>
 
-                    {/* Projects */}
+                    {/* Projects Section - Updated with Accordion and Tags */}
                     <section className="stack-medium">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <h3 style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', color: '#999', letterSpacing: '0.05em' }}>Projects</h3>
@@ -451,44 +567,121 @@ const Builder = () => {
                                 <Plus size={14} /> Add Project
                             </button>
                         </div>
-                        {resumeData.projects.map((item, index) => {
-                            const bulletGuidance = checkBulletGuidance(item.description);
-                            return (
-                                <div key={index} className="card" style={{ padding: '16px', position: 'relative' }}>
-                                    <button onClick={() => removeItem('projects', index)} style={{ position: 'absolute', top: '16px', right: '16px', color: '#ff4444', border: 'none', background: 'none', cursor: 'pointer' }}>
-                                        <Trash2 size={16} />
-                                    </button>
-                                    <div className="input-group">
-                                        <label>Project Name</label>
-                                        <input type="text" value={item.name} onChange={(e) => updateItem('projects', index, 'name', e.target.value)} />
+                        <div className="stack-small">
+                            {resumeData.projects.map((item, index) => {
+                                const isExpanded = expandedProjects[index];
+                                const charCount = item.description.length;
+                                return (
+                                    <div key={index} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                                        <button
+                                            onClick={() => toggleProject(index)}
+                                            style={{ width: '100%', padding: '16px', border: 'none', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}
+                                        >
+                                            <span style={{ fontWeight: 700, fontSize: '14px' }}>{item.name || `Project ${index + 1}`}</span>
+                                            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                        </button>
+
+                                        {isExpanded && (
+                                            <div style={{ padding: '0 16px 16px', borderTop: '1px solid #f0f0f0' }}>
+                                                <div className="stack-medium" style={{ marginTop: '16px' }}>
+                                                    <div className="input-group">
+                                                        <label>Project Title</label>
+                                                        <input type="text" value={item.name} onChange={(e) => updateItem('projects', index, 'name', e.target.value)} placeholder="e.g. AI Portfolio" />
+                                                    </div>
+
+                                                    <div className="input-group">
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                            <label>Description</label>
+                                                            <span style={{ fontSize: '11px', color: charCount > 200 ? '#ff4444' : '#888' }}>{charCount}/200</span>
+                                                        </div>
+                                                        <textarea
+                                                            rows="3"
+                                                            value={item.description}
+                                                            onChange={(e) => updateItem('projects', index, 'description', e.target.value.slice(0, 200))}
+                                                            placeholder="Describe what you built and the impact..."
+                                                        />
+                                                    </div>
+
+                                                    <div className="input-group">
+                                                        <label>Tech Stack (Press Enter to add)</label>
+                                                        <TagInput
+                                                            tags={item.techStack || []}
+                                                            onAdd={(tag) => updateItem('projects', index, 'techStack', [...(item.techStack || []), tag])}
+                                                            onRemove={(ti) => updateItem('projects', index, 'techStack', item.techStack.filter((_, i) => i !== ti))}
+                                                            placeholder="React, Firebase..."
+                                                        />
+                                                    </div>
+
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                                        <div className="input-group">
+                                                            <label>Live URL</label>
+                                                            <input type="text" value={item.liveUrl} onChange={(e) => updateItem('projects', index, 'liveUrl', e.target.value)} placeholder="https://..." />
+                                                        </div>
+                                                        <div className="input-group">
+                                                            <label>GitHub URL</label>
+                                                            <input type="text" value={item.githubUrl} onChange={(e) => updateItem('projects', index, 'githubUrl', e.target.value)} placeholder="github.com/..." />
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => removeItem('projects', index)}
+                                                        style={{ color: '#ff4444', border: '1px solid #ff4444', background: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 600, marginTop: '8px' }}
+                                                    >
+                                                        Delete Project
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="input-group" style={{ marginTop: '12px' }}>
-                                        <label>Description</label>
-                                        <textarea rows="2" value={item.description} onChange={(e) => updateItem('projects', index, 'description', e.target.value)} />
-                                        {bulletGuidance && bulletGuidance.map((g, i) => (
-                                            <span key={i} style={{ fontSize: '11px', color: '#C18B3A', marginTop: '4px', fontWeight: 500, display: 'block' }}>{g}</span>
-                                        ))}
-                                    </div>
-                                    <div className="input-group" style={{ marginTop: '12px' }}>
-                                        <label>Link</label>
-                                        <input type="text" value={item.link} onChange={(e) => updateItem('projects', index, 'link', e.target.value)} />
-                                    </div>
-                                </div>
-                            )
-                        })}
+                                )
+                            })}
+                        </div>
                     </section>
 
-                    {/* Skills */}
+
+                    {/* Skills Section - Updated with Categories and Suggestion */}
                     <section className="stack-medium" style={{ paddingBottom: '80px' }}>
-                        <h3 style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', color: '#999', letterSpacing: '0.05em' }}>Skills</h3>
-                        <div className="input-group">
-                            <label>Technical Skills (comma-separated)</label>
-                            <input
-                                type="text"
-                                value={resumeData.skills}
-                                onChange={(e) => setResumeData(prev => ({ ...prev, skills: e.target.value }))}
-                                placeholder="React, Node.js, Python..."
-                            />
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3 style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', color: '#999', letterSpacing: '0.05em' }}>Skills</h3>
+                            <button
+                                onClick={suggestSkills}
+                                disabled={isSuggesting}
+                                style={{ background: '#000', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 600, opacity: isSuggesting ? 0.7 : 1 }}
+                            >
+                                <Sparkles size={14} /> {isSuggesting ? 'Suggesting...' : '✨ Suggest Skills'}
+                            </button>
+                        </div>
+
+                        <div className="stack-medium">
+                            <div className="input-group">
+                                <label>Technical Skills ({resumeData.skills.technical.length})</label>
+                                <TagInput
+                                    tags={resumeData.skills.technical}
+                                    onAdd={(tag) => updateSkills('technical', [...resumeData.skills.technical, tag])}
+                                    onRemove={(i) => updateSkills('technical', resumeData.skills.technical.filter((_, idx) => idx !== i))}
+                                    placeholder="Add technical skill..."
+                                />
+                            </div>
+
+                            <div className="input-group">
+                                <label>Soft Skills ({resumeData.skills.soft.length})</label>
+                                <TagInput
+                                    tags={resumeData.skills.soft}
+                                    onAdd={(tag) => updateSkills('soft', [...resumeData.skills.soft, tag])}
+                                    onRemove={(i) => updateSkills('soft', resumeData.skills.soft.filter((_, idx) => idx !== i))}
+                                    placeholder="Add soft skill..."
+                                />
+                            </div>
+
+                            <div className="input-group">
+                                <label>Tools & Technologies ({resumeData.skills.tools.length})</label>
+                                <TagInput
+                                    tags={resumeData.skills.tools}
+                                    onAdd={(tag) => updateSkills('tools', [...resumeData.skills.tools, tag])}
+                                    onRemove={(i) => updateSkills('tools', resumeData.skills.tools.filter((_, idx) => idx !== i))}
+                                    placeholder="Add tool..."
+                                />
+                            </div>
                         </div>
                     </section>
                 </div>
